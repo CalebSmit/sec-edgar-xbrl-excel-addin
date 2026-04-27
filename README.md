@@ -10,14 +10,24 @@ No sign-up, no subscriptions, no backend — data comes straight from the SEC.
 - Output now writes to your active workbook instead of the hidden add-in workbook.
 - SEC ISO dates are parsed in a locale-independent way to avoid regional date issues.
 - `Ctrl + Shift + S` shortcut now targets the add-in macro explicitly.
-- HTTP requests now use a compliant SEC identity string (project URL + contact).
+- HTTP requests now use a compliant SEC identity string (`AppName email`).
+- HTTP transport now auto-retries transient `403/429/5xx` SEC responses with exponential backoff + jitter.
+- `Retry-After` response headers are respected when SEC provides them.
+- Ticker map lookups now use in-memory caching to reduce repeated SEC requests.
 - JSON parsing no longer hard-requires Microsoft Scripting Runtime.
 
 ---
 
 ## Download & Install
 
-**[⬇ Download SEC_XBRL_Addin.xlam](https://github.com/CalebSmit/sec-edgar-xbrl-excel-addin/raw/master/dist/SEC_XBRL_Addin.xlam)**
+**Latest Download:**
+
+- **[⬇ SEC_XBRL_Addin.xlam (master/dist)](https://github.com/CalebSmit/sec-edgar-xbrl-excel-addin/raw/master/dist/SEC_XBRL_Addin.xlam)**
+- **[Releases page](https://github.com/CalebSmit/sec-edgar-xbrl-excel-addin/releases)**
+
+**Latest Source Code:**
+
+- **[GitHub repository (master)](https://github.com/CalebSmit/sec-edgar-xbrl-excel-addin)**
 
 > ⚠️ **Follow all 4 steps below in order.** Skipping any step is the most common reason the ribbon tab does not appear.
 

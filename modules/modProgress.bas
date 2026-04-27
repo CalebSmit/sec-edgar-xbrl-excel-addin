@@ -61,11 +61,20 @@ Public Sub GetErrorMessage(ByVal errCode As String, _
 
         Case ERR_HTTP_RATE_LIMITED  ' E2
             msgTitle = "SEC Rate Limit (E2)"
-            msgBody = "SEC rate-limited. Please wait 30 seconds and try again."
+            If Len(context) > 0 Then
+                msgBody = context
+            Else
+                msgBody = "SEC temporarily rate-limited or blocked the request. The add-in auto-retried with backoff." & vbCrLf & _
+                          "If this continues, wait 30-60 seconds and try again."
+            End If
 
         Case ERR_NO_NETWORK         ' E3
             msgTitle = "No Connection (E3)"
-            msgBody = "Cannot connect to SEC servers. Check your internet connection."
+            If Len(context) > 0 Then
+                msgBody = context
+            Else
+                msgBody = "Cannot connect to SEC servers. Check your internet connection."
+            End If
 
         Case ERR_NO_USGAAP          ' E4
             msgTitle = "No XBRL Data (E4)"
@@ -73,7 +82,11 @@ Public Sub GetErrorMessage(ByVal errCode As String, _
 
         Case ERR_JSON_PARSE         ' E5
             msgTitle = "Parse Error (E5)"
-            msgBody = "Failed to parse SEC response. The data format may have changed."
+            If Len(context) > 0 Then
+                msgBody = context
+            Else
+                msgBody = "Failed to parse SEC response. The data format may have changed."
+            End If
 
         Case Else
             msgTitle = "Error"

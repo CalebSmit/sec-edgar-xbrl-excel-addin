@@ -32,7 +32,12 @@ Public Const SEC_FACTS_BASE_URL As String = _
 Public Const HTTP_USER_AGENT As String = _
     "SEC XBRL Excel Add-in calebsmit@users.noreply.github.com"
 Public Const HTTP_TIMEOUT_MS As Long = 30000    ' 30s
-Public Const RATE_LIMIT_DELAY_MS As Long = 200  ' 200ms = 5 req/sec max
+Public Const RATE_LIMIT_DELAY_MS As Long = 250  ' 250ms = 4 req/sec max (still conservative)
+Public Const HTTP_MAX_RETRIES As Long = 4       ' Initial try + 4 retries on transient errors
+Public Const HTTP_RETRY_BASE_MS As Long = 750   ' Exponential backoff base
+Public Const HTTP_RETRY_MAX_MS As Long = 10000  ' Cap individual retry wait at 10s
+Public Const HTTP_RETRY_TOTAL_BUDGET_MS As Long = 60000 ' Give up after 60s total retry time
+Public Const TICKER_CACHE_TTL_MINUTES As Long = 60 ' Cache company_tickers.json in memory
 
 ' ---------------------------------------------------------------------------
 ' Worksheet Names

@@ -35,8 +35,12 @@ Public Sub PullSECFinancials()
     cik10 = ResolveTicker(ticker, errCode, errMsg, companyName)
 
     If errCode <> "" Then
-        ' Pass ticker as context so E1 message reads: "Ticker 'AAPL' not found..."
-        ShowError errCode, Trim(ticker)
+        If errCode = ERR_TICKER_NOT_FOUND Then
+            ' Pass ticker as context so E1 message reads: "Ticker 'AAPL' not found..."
+            ShowError errCode, Trim(ticker)
+        Else
+            ShowError errCode, errMsg
+        End If
         Exit Sub
     End If
 
@@ -47,7 +51,7 @@ Public Sub PullSECFinancials()
     jsonText = FetchCompanyFacts(cik10, errCode, errMsg)
 
     If errCode <> "" Then
-        ShowError errCode
+        ShowError errCode, errMsg
         Exit Sub
     End If
 
@@ -67,7 +71,7 @@ Public Sub PullSECFinancials()
     Set usGaap = GetUSGAAP(parsed, errCode, errMsg)
 
     If errCode <> "" Then
-        ShowError errCode
+        ShowError errCode, errMsg
         Exit Sub
     End If
 

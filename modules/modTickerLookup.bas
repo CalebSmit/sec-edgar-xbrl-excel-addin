@@ -20,6 +20,9 @@ Attribute VB_Name = "modTickerLookup"
 '==============================================================================
 Option Explicit
 
+Private cachedTickerMap As Object
+Private cachedTickerMapLoadedAt As Date
+
 '------------------------------------------------------------------------------
 ' ResolveTicker
 ' Looks up a ticker in SEC company_tickers.json and returns the 10-digit
@@ -55,35 +58,11 @@ Public Function ResolveTicker(ByVal ticker As String, _
     ' Update status bar (PRD FR-3)
     Application.StatusBar = "Resolving ticker: " & tickerUC & "..."
     
-    ' --- Fetch the ticker->CIK mapping file ---------------------------------
-    Dim httpErr As String, httpMsg As String
-    Dim jsonText As String
-    jsonText = RateLimitedGet(SEC_TICKER_URL, httpErr, httpMsg)
-    
-    If httpErr <> "" Then
-        errCode = httpErr
-        errMsg = httpMsg
-        Application.StatusBar = False
-        Exit Function
-    End If
-    
-    If Len(jsonText) = 0 Then
-        errCode = ERR_JSON_PARSE
-        errMsg = "Failed to parse SEC response. The data format may have changed."
-        Application.StatusBar = False
-        Exit Function
-    End If
-    
-    ' --- Parse JSON --------------------------------------------------------
-    ' VBA-JSON (JsonConverter) returns a Scripting.Dictionary for JSON objects
+    ' --- Fetch (or reuse) parsed ticker map --------------------------------
     Dim parsed As Object
-    On Error GoTo ParseError
-    Set parsed = JsonConverter.ParseJson(jsonText)
-    On Error GoTo 0
-    
-    If parsed Is Nothing Then
-        errCode = ERR_JSON_PARSE
-        errMsg = "Failed to parse SEC response. The data format may have changed."
+    Set parsed = GetTickerMap(errCode, errMsg)
+
+    If errCode <> "" Or parsed Is Nothing Then
         Application.StatusBar = False
         Exit Function
     End If
@@ -127,6 +106,56 @@ ParseError:
     errMsg = "Failed to parse SEC response. The data format may have changed."
     Application.StatusBar = False
     Exit Function
+End Function
+
+Private Function GetTickerMap(ByRef errCode As String, ByRef errMsg As String) As Object
+    errCode = ""
+    errMsg = ""
+
+    If Not cachedTickerMap Is Nothing Then
+        Dim ageMinutes As Double
+        ageMinutes = DateDiff("s", cachedTickerMapLoadedAt, Now) / 60#
+        If ageMinutes < TICKER_CACHE_TTL_MINUTES Then
+            Set GetTickerMap = cachedTickerMap
+            Exit Function
+        End If
+    End If
+
+    Dim httpErr As String, httpMsg As String
+    Dim jsonText As String
+    jsonText = RateLimitedGet(SEC_TICKER_URL, httpErr, httpMsg)
+
+    If httpErr <> "" Then
+        errCode = httpErr
+        errMsg = httpMsg
+        Set GetTickerMap = Nothing
+        Exit Function
+    End If
+
+    If Len(jsonText) = 0 Then
+        errCode = ERR_JSON_PARSE
+        errMsg = "Failed to parse SEC response. The data format may have changed."
+        Set GetTickerMap = Nothing
+        Exit Function
+    End If
+
+    Dim parsed As Object
+    On Error GoTo ParseFail
+    Set parsed = JsonConverter.ParseJson(jsonText)
+    On Error GoTo 0
+
+    If parsed Is Nothing Then GoTo ParseFail
+
+    Set cachedTickerMap = parsed
+    cachedTickerMapLoadedAt = Now
+    Set GetTickerMap = cachedTickerMap
+    Exit Function
+
+ParseFail:
+    On Error GoTo 0
+    errCode = ERR_JSON_PARSE
+    errMsg = "Failed to parse SEC response. The data format may have changed."
+    Set GetTickerMap = Nothing
 End Function
 
 '------------------------------------------------------------------------------

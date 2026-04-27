@@ -24,6 +24,9 @@ Option Explicit
     Private Declare Sub Sleep Lib "kernel32" (ByVal dwMilliseconds As Long)
 #End If
 
+Private mRequestInProgress As Boolean
+Private mRandomSeeded As Boolean
+
 '------------------------------------------------------------------------------
 ' GetHTTP
 ' Synchronous GET. Returns response body on HTTP 200.
@@ -34,12 +37,16 @@ Option Explicit
 '   errCode  -  output: "" on success; ERR_* on failure
 '   errMsg   -  output: user-facing message for MsgBox
 '------------------------------------------------------------------------------
-Public Function GetHTTP(ByVal url As String, _
-                        ByRef errCode As String, _
-                        ByRef errMsg As String) As String
+Private Function GetHTTP(ByVal url As String, _
+                         ByRef errCode As String, _
+                         ByRef errMsg As String, _
+                         Optional ByRef outStatusCode As Long = 0, _
+                         Optional ByRef outRetryAfterSec As Long = 0) As String
     GetHTTP = ""
     errCode = ""
     errMsg = ""
+    outStatusCode = 0
+    outRetryAfterSec = 0
 
     Dim http As Object
     Dim useWinHttp As Boolean
@@ -76,14 +83,23 @@ Public Function GetHTTP(ByVal url As String, _
     ' The SEC bot detection checks for minimal HTTP compliance.
     ' Adding realistic headers reduces false-positive bot detection (HTTP 403).
     ' Per SEC developer FAQ: User-Agent format "AppName email" is required.
+    Dim headerErr As Long
+
     On Error Resume Next
     http.SetRequestHeader "User-Agent", HTTP_USER_AGENT
+    headerErr = Err.Number
+    Err.Clear
     http.SetRequestHeader "Accept", "application/json"
     http.SetRequestHeader "Accept-Language", "en-US,en;q=0.9"
     http.SetRequestHeader "Accept-Encoding", "gzip, deflate"
-    http.SetRequestHeader "Connection", "keep-alive"
-    http.SetRequestHeader "Upgrade-Insecure-Requests", "1"
     On Error GoTo 0
+
+    If headerErr <> 0 Then
+        errCode = ERR_NO_NETWORK
+        errMsg = "Failed to configure SEC request headers. Close Excel and try again."
+        Set http = Nothing
+        Exit Function
+    End If
     
     Application.StatusBar = "Sending request to: " & Left(url, 50) & "..."
     DoEvents
@@ -94,6 +110,7 @@ Public Function GetHTTP(ByVal url As String, _
     ' --- Evaluate response -------------------------------------------------
     Dim statusCode As Long
     statusCode = CLng(http.Status)
+    outStatusCode = statusCode
 
     ' DEBUG: Log what happened
     Application.StatusBar = "SEC response: HTTP " & statusCode
@@ -104,6 +121,8 @@ Public Function GetHTTP(ByVal url As String, _
             GetHTTP = http.ResponseText      ' Raw JSON body
 
         Case 403, 429
+            outRetryAfterSec = TryGetRetryAfterSeconds(http)
+
             ' DEBUG: Log rate limit details
             Dim responseText As String
             On Error Resume Next
@@ -135,6 +154,7 @@ Public Function GetHTTP(ByVal url As String, _
     Exit Function
 
 NetworkError:
+    Application.StatusBar = False
     errCode = ERR_NO_NETWORK
     errMsg = "Cannot connect to SEC servers. Check your internet connection."
     If Not http Is Nothing Then Set http = Nothing
@@ -153,30 +173,151 @@ Public Function RateLimitedGet(ByVal url As String, _
                                ByRef errCode As String, _
                                ByRef errMsg As String) As String
     Static lastRequestTimeMs As Double
+    Dim startTimeMs As Double
+    Dim attempt As Long
+    Dim statusCode As Long
+    Dim retryAfterSec As Long
 
-    ' Check time since last request
+    If mRequestInProgress Then
+        errCode = ERR_HTTP_RATE_LIMITED
+        errMsg = "A SEC request is already in progress. Please wait for it to finish."
+        Exit Function
+    End If
+
+    mRequestInProgress = True
+    On Error GoTo CleanupWithError
+
+    startTimeMs = CDbl(Timer * 1000)
+
+    For attempt = 1 To HTTP_MAX_RETRIES + 1
+        If GetElapsedMs(startTimeMs, CDbl(Timer * 1000)) > HTTP_RETRY_TOTAL_BUDGET_MS Then
+            errCode = ERR_NO_NETWORK
+            errMsg = "SEC request timed out after multiple retries. Please try again."
+            Exit For
+        End If
+
+        EnforceInterRequestDelay lastRequestTimeMs
+        lastRequestTimeMs = CDbl(Timer * 1000)
+
+        RateLimitedGet = GetHTTP(url, errCode, errMsg, statusCode, retryAfterSec)
+        If errCode = "" Then Exit For
+
+        If Not IsRetriableHTTPError(errCode, statusCode) Then
+            If attempt > 1 Then
+                errMsg = "Request ended with HTTP " & statusCode & " after " & attempt & " attempts. " & errMsg
+            End If
+            Exit For
+        End If
+
+        If attempt > HTTP_MAX_RETRIES Then
+            errMsg = "Request failed after " & attempt & " attempts. " & errMsg
+            Exit For
+        End If
+
+        Dim backoffMs As Long
+        backoffMs = ComputeRetryDelayMs(attempt, retryAfterSec)
+
+        Application.StatusBar = "SEC EDGAR: transient HTTP " & statusCode & _
+                                ", retrying in " & Format(backoffMs / 1000, "0.0") & "s" & _
+                                " (" & attempt & "/" & HTTP_MAX_RETRIES & ")"
+        Sleep backoffMs
+    Next attempt
+
+Cleanup:
+    mRequestInProgress = False
+    Exit Function
+
+CleanupWithError:
+    mRequestInProgress = False
+    errCode = ERR_NO_NETWORK
+    errMsg = "Unexpected request error. Please retry."
+End Function
+
+Private Sub EnforceInterRequestDelay(ByVal lastRequestTimeMs As Double)
     Dim nowMs As Double
     nowMs = CDbl(Timer * 1000)
-    
-    ' If we've made a request recently, sleep to enforce rate limit
-    ' Otherwise (first request), proceed immediately
-    If lastRequestTimeMs > 0 Then
-        Dim timeSinceLastRequestMs As Double
-        timeSinceLastRequestMs = nowMs - lastRequestTimeMs
 
-        ' Timer resets at midnight; clamp to zero elapsed if wrap occurred.
-        If timeSinceLastRequestMs < 0 Then timeSinceLastRequestMs = 0
-        
-        ' Only sleep if less than 200ms has passed
-        If timeSinceLastRequestMs < RATE_LIMIT_DELAY_MS Then
-            Sleep CLng(RATE_LIMIT_DELAY_MS - timeSinceLastRequestMs)
+    If lastRequestTimeMs > 0 Then
+        Dim elapsedMs As Double
+        elapsedMs = GetElapsedMs(lastRequestTimeMs, nowMs)
+
+        If elapsedMs < RATE_LIMIT_DELAY_MS Then
+            Sleep CLng(RATE_LIMIT_DELAY_MS - elapsedMs)
         End If
     End If
-    
-    ' Record this request time for next call
-    lastRequestTimeMs = CDbl(Timer * 1000)
-    
-    RateLimitedGet = GetHTTP(url, errCode, errMsg)
+End Sub
+
+Private Function GetElapsedMs(ByVal fromMs As Double, ByVal toMs As Double) As Double
+    Dim elapsedMs As Double
+    elapsedMs = toMs - fromMs
+
+    If elapsedMs < -43200000# Then
+        elapsedMs = elapsedMs + 86400000#
+    ElseIf elapsedMs < 0 Then
+        elapsedMs = 0
+    End If
+
+    GetElapsedMs = elapsedMs
+End Function
+
+Private Function IsRetriableHTTPError(ByVal errCode As String, ByVal statusCode As Long) As Boolean
+    Select Case statusCode
+        Case 403, 429, 500, 502, 503, 504
+            IsRetriableHTTPError = True
+            Exit Function
+    End Select
+
+    If errCode = ERR_NO_NETWORK Then
+        IsRetriableHTTPError = True
+        Exit Function
+    End If
+
+    IsRetriableHTTPError = False
+End Function
+
+Private Function ComputeRetryDelayMs(ByVal attempt As Long, ByVal retryAfterSec As Long) As Long
+    Dim expDelay As Double
+    expDelay = CDbl(HTTP_RETRY_BASE_MS) * (2 ^ (attempt - 1))
+
+    If expDelay > HTTP_RETRY_MAX_MS Then expDelay = HTTP_RETRY_MAX_MS
+
+    ' Small jitter avoids repeated synchronized retries.
+    Dim jitterMs As Long
+    If Not mRandomSeeded Then
+        Randomize
+        mRandomSeeded = True
+    End If
+    jitterMs = CLng(Rnd() * 300)
+
+    Dim computedMs As Long
+    computedMs = CLng(expDelay) + jitterMs
+
+    If retryAfterSec > 0 Then
+        Dim retryAfterMs As Long
+        retryAfterMs = CLng(retryAfterSec) * 1000
+        If retryAfterMs > computedMs Then computedMs = retryAfterMs
+    End If
+
+    ComputeRetryDelayMs = computedMs
+End Function
+
+Private Function TryGetRetryAfterSeconds(ByVal http As Object) As Long
+    On Error Resume Next
+    Dim retryAfterRaw As String
+    retryAfterRaw = Trim$(CStr(http.GetResponseHeader("Retry-After")))
+    On Error GoTo 0
+
+    If Len(retryAfterRaw) = 0 Then
+        TryGetRetryAfterSeconds = 0
+        Exit Function
+    End If
+
+    If IsNumeric(retryAfterRaw) Then
+        TryGetRetryAfterSeconds = CLng(retryAfterRaw)
+    Else
+        ' HTTP-date Retry-After parsing omitted; use exponential backoff fallback.
+        TryGetRetryAfterSeconds = 0
+    End If
 End Function
 
 '------------------------------------------------------------------------------
