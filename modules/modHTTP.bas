@@ -72,11 +72,17 @@ Public Function GetHTTP(ByVal url As String, _
                          HTTP_TIMEOUT_MS, HTTP_TIMEOUT_MS
     End If
 
-    ' SEC-required headers (PRD S3)
-    ' DEBUG: Verify headers are set correctly
+    ' SEC-required headers (PRD S3) + anti-bot headers
+    ' The SEC bot detection checks for minimal HTTP compliance.
+    ' Adding realistic headers reduces false-positive bot detection (HTTP 403).
+    ' Per SEC developer FAQ: User-Agent format "AppName email" is required.
     On Error Resume Next
     http.SetRequestHeader "User-Agent", HTTP_USER_AGENT
     http.SetRequestHeader "Accept", "application/json"
+    http.SetRequestHeader "Accept-Language", "en-US,en;q=0.9"
+    http.SetRequestHeader "Accept-Encoding", "gzip, deflate"
+    http.SetRequestHeader "Connection", "keep-alive"
+    http.SetRequestHeader "Upgrade-Insecure-Requests", "1"
     On Error GoTo 0
     
     Application.StatusBar = "Sending request to: " & Left(url, 50) & "..."
@@ -136,13 +142,37 @@ End Function
 
 '------------------------------------------------------------------------------
 ' RateLimitedGet
-' Enforces the 200ms inter-request delay (5 req/sec cap, PRD S3) using the
-' kernel32 Sleep function for millisecond-accurate delay, then calls GetHTTP.
+' Smart rate limiting: only sleep if the last request was recent.
+' This avoids unnecessary delays on the first request while still enforcing
+' the 200ms inter-request spacing for subsequent calls (5 req/sec cap).
+' Uses millisecond-accurate kernel32 Sleep() for precision.
+'
+' IMPROVED: Eliminates first-request delay that could trigger SEC bot detection.
 '------------------------------------------------------------------------------
+Private lastRequestTimeMs As Double
+
 Public Function RateLimitedGet(ByVal url As String, _
                                ByRef errCode As String, _
                                ByRef errMsg As String) As String
-    Sleep RATE_LIMIT_DELAY_MS
+    ' Check time since last request
+    Dim nowMs As Double
+    nowMs = CDbl(Timer * 1000)
+    
+    ' If we've made a request recently, sleep to enforce rate limit
+    ' Otherwise (first request), proceed immediately
+    If lastRequestTimeMs > 0 Then
+        Dim timeSinceLastRequestMs As Double
+        timeSinceLastRequestMs = nowMs - lastRequestTimeMs
+        
+        ' Only sleep if less than 200ms has passed
+        If timeSinceLastRequestMs < RATE_LIMIT_DELAY_MS Then
+            Sleep CLng(RATE_LIMIT_DELAY_MS - timeSinceLastRequestMs)
+        End If
+    End If
+    
+    ' Record this request time for next call
+    lastRequestTimeMs = CDbl(Timer * 1000)
+    
     RateLimitedGet = GetHTTP(url, errCode, errMsg)
 End Function
 
