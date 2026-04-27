@@ -51,16 +51,18 @@ Option Explicit
 '==============================================================================
 
 '------------------------------------------------------------------------------
-' ParseJSON
+' ParseSECJson
 ' Wraps JsonConverter.ParseJson. Returns Nothing on failure.
 ' VBA-JSON returns Scripting.Dictionary for objects, Collection for arrays.
+' NOTE: Named ParseSECJson (not ParseJSON) to avoid name clash with
+' JsonConverter.bas which also exports a ParseJSON symbol.
 '------------------------------------------------------------------------------
-Public Function ParseJSON(ByVal jsonText As String) As Object
+Public Function ParseSECJson(ByVal jsonText As String) As Object
     On Error GoTo ParseFailed
-    Set ParseJSON = JsonConverter.ParseJson(jsonText)
+    Set ParseSECJson = JsonConverter.ParseJson(jsonText)
     Exit Function
 ParseFailed:
-    Set ParseJSON = Nothing
+    Set ParseSECJson = Nothing
 End Function
 
 '------------------------------------------------------------------------------

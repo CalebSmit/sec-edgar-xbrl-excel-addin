@@ -55,7 +55,7 @@ Public Sub PullSECFinancials()
     ShowProgress PROG_PARSING
 
     Dim parsed As Object
-    Set parsed = ParseJSON(jsonText)
+    Set parsed = ParseSECJson(jsonText)
 
     If parsed Is Nothing Then
         ShowError ERR_JSON_PARSE
@@ -212,7 +212,7 @@ Public Sub TestPhase2()
     ' Step 3: Parse
     Application.StatusBar = "Phase 2 test — parsing JSON..."
     Dim parsed As Object
-    Set parsed = ParseJSON(jsonText)
+    Set parsed = ParseSECJson(jsonText)
 
     If parsed Is Nothing Then
         Application.StatusBar = False
@@ -362,7 +362,7 @@ Public Sub TestPhase3()
 
     Application.StatusBar = "Phase 3 test - parsing JSON..."
     Dim parsed As Object
-    Set parsed = ParseJSON(jsonText)
+    Set parsed = ParseSECJson(jsonText)
     If parsed Is Nothing Then
         errMsg = "JSON parse returned Nothing"
         GoTo TestFailed
@@ -571,7 +571,7 @@ Public Sub TestPhase4()
 
     Application.StatusBar = "Phase 4 test - parsing + classifying..."
     Dim parsed As Object
-    Set parsed = ParseJSON(jsonText)
+    Set parsed = ParseSECJson(jsonText)
     If parsed Is Nothing Then
         errMsg = "JSON parse returned Nothing"
         GoTo TestFailed
