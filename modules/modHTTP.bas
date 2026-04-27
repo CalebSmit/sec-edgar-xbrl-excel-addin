@@ -37,123 +37,193 @@ Private mRandomSeeded As Boolean
 '   errCode  -  output: "" on success; ERR_* on failure
 '   errMsg   -  output: user-facing message for MsgBox
 '------------------------------------------------------------------------------
-Private Function GetHTTP(ByVal url As String, _
-                         ByRef errCode As String, _
-                         ByRef errMsg As String, _
-                         Optional ByRef outStatusCode As Long = 0, _
-                         Optional ByRef outRetryAfterSec As Long = 0) As String
     GetHTTP = ""
     errCode = ""
     errMsg = ""
     outStatusCode = 0
     outRetryAfterSec = 0
 
-    Dim http As Object
-    Dim useWinHttp As Boolean
-    useWinHttp = True
+    Application.StatusBar = "Sending request to: " & Left(url, 50) & "..."
 
-    ' --- Instantiate HTTP object -------------------------------------------
-    On Error Resume Next
-    Set http = CreateObject("WinHttp.WinHttpRequest.5.1")
-    If Err.Number <> 0 Or http Is Nothing Then
-        Err.Clear
-        useWinHttp = False
-        Set http = CreateObject("MSXML2.ServerXMLHTTP.6.0")
+    ' Primary transport: WinHTTP. Fallback: MSXML transport if 403 persists.
+    GetHTTP = ExecuteSingleRequest(url, True, errCode, errMsg, outStatusCode, outRetryAfterSec)
+
+    If errCode <> "" And outStatusCode = 403 Then
+        Dim altErrCode As String, altErrMsg As String
+        Dim altStatusCode As Long, altRetryAfterSec As Long
+        Dim altResponse As String
+
+        Application.StatusBar = "SEC EDGAR: HTTP 403 on primary transport, trying fallback transport..."
+        altResponse = ExecuteSingleRequest(url, False, altErrCode, altErrMsg, altStatusCode, altRetryAfterSec)
+
+        If altErrCode = "" Then
+            GetHTTP = altResponse
+            errCode = ""
+            errMsg = ""
+            outStatusCode = altStatusCode
+            outRetryAfterSec = altRetryAfterSec
+            Exit Function
+        End If
+
+        ' If fallback returned a more actionable status, surface that result.
+        If altStatusCode <> 403 And altStatusCode <> 0 Then
+            errCode = altErrCode
+            errMsg = altErrMsg
+            outStatusCode = altStatusCode
+            outRetryAfterSec = altRetryAfterSec
+        End If
     End If
-    On Error GoTo 0
+NetworkError:
+
+Private Function ExecuteSingleRequest(ByVal url As String, _
+                                      ByVal preferWinHttp As Boolean, _
+                                      ByRef errCode As String, _
+                                      ByRef errMsg As String, _
+                                      ByRef outStatusCode As Long, _
+                                      ByRef outRetryAfterSec As Long) As String
+    ExecuteSingleRequest = ""
+    errCode = ""
+    errMsg = ""
+    outStatusCode = 0
+    outRetryAfterSec = 0
+
+    Dim http As Object
+    Dim usingWinHttp As Boolean
+    Set http = CreateHttpClient(preferWinHttp, usingWinHttp)
 
     If http Is Nothing Then
         errCode = ERR_NO_NETWORK
-        errMsg = "Cannot connect to SEC servers. Check your internet connection."
+        errMsg = "Cannot create HTTP client. Check your network and Excel security settings."
         Exit Function
     End If
 
-    ' --- Open + configure --------------------------------------------------
-    On Error GoTo NetworkError
+    On Error GoTo RequestError
 
-    http.Open "GET", url, False          ' False = synchronous
+    http.Open "GET", url, False
 
-    ' Timeouts: resolve, connect, send, receive (all in milliseconds)
-    If useWinHttp Then
+    If usingWinHttp Then
         http.SetTimeouts HTTP_TIMEOUT_MS, HTTP_TIMEOUT_MS, _
                          HTTP_TIMEOUT_MS, HTTP_TIMEOUT_MS
     End If
 
-    ' SEC-required headers (PRD S3) + anti-bot headers
-    ' The SEC bot detection checks for minimal HTTP compliance.
-    ' Adding realistic headers reduces false-positive bot detection (HTTP 403).
-    ' Per SEC developer FAQ: User-Agent format "AppName email" is required.
-    Dim headerErr As Long
-
-    On Error Resume Next
-    http.SetRequestHeader "User-Agent", HTTP_USER_AGENT
-    headerErr = Err.Number
-    Err.Clear
-    http.SetRequestHeader "Accept", "application/json"
-    http.SetRequestHeader "Accept-Language", "en-US,en;q=0.9"
-    http.SetRequestHeader "Accept-Encoding", "gzip, deflate"
-    On Error GoTo 0
-
-    If headerErr <> 0 Then
-        errCode = ERR_NO_NETWORK
-        errMsg = "Failed to configure SEC request headers. Close Excel and try again."
+    If Not ApplySECHeaders(http, errCode, errMsg) Then
         Set http = Nothing
         Exit Function
     End If
-    
-    Application.StatusBar = "Sending request to: " & Left(url, 50) & "..."
-    DoEvents
 
-    ' --- Send --------------------------------------------------------------
     http.Send
 
-    ' --- Evaluate response -------------------------------------------------
-    Dim statusCode As Long
-    statusCode = CLng(http.Status)
-    outStatusCode = statusCode
+    outStatusCode = CLng(http.Status)
+    Application.StatusBar = "SEC response: HTTP " & outStatusCode
 
-    ' DEBUG: Log what happened
-    Application.StatusBar = "SEC response: HTTP " & statusCode
-    DoEvents
-
-    Select Case statusCode
+    Select Case outStatusCode
         Case 200
-            GetHTTP = http.ResponseText      ' Raw JSON body
+            ExecuteSingleRequest = http.ResponseText
 
         Case 403, 429
             outRetryAfterSec = TryGetRetryAfterSeconds(http)
-
-            ' DEBUG: Log rate limit details
-            Dim responseText As String
-            On Error Resume Next
-            responseText = http.ResponseText
-            On Error GoTo 0
-            
             errCode = ERR_HTTP_RATE_LIMITED
-            errMsg = "SEC rate-limited (HTTP " & statusCode & "). Please wait 30 seconds and try again."
-            
-            ' If it's a 403, it's often a bot detection issue
-            If statusCode = 403 Then
-                errMsg = "SEC blocked request (HTTP 403). This may indicate:" & vbNewLine & _
-                         "- Add-in is still loaded (close Excel completely)" & vbNewLine & _
-                         "- Multiple rapid requests" & vbNewLine & _
-                         "- Download fresh XLAM from GitHub"
+
+            If outStatusCode = 403 Then
+                errMsg = "SEC blocked request (HTTP 403). The add-in will retry automatically."
+            Else
+                errMsg = "SEC rate-limited (HTTP 429). The add-in will retry automatically."
             End If
 
         Case 404
-            ' Caller interprets 404 based on context (ticker not found, etc.)
             errCode = ERR_TICKER_NOT_FOUND
             errMsg = "Resource not found on SEC servers (HTTP 404)."
 
         Case Else
             errCode = ERR_NO_NETWORK
-            errMsg = "SEC server returned HTTP " & statusCode & ". Please try again later."
+            errMsg = "SEC server returned HTTP " & outStatusCode & ". Please try again later."
     End Select
 
     Set http = Nothing
     Exit Function
 
-NetworkError:
+RequestError:
+    Application.StatusBar = False
+    errCode = ERR_NO_NETWORK
+    errMsg = "Cannot connect to SEC servers. Check your internet connection."
+    Set http = Nothing
+End Function
+
+Private Function CreateHttpClient(ByVal preferWinHttp As Boolean, ByRef usingWinHttp As Boolean) As Object
+    Set CreateHttpClient = Nothing
+    usingWinHttp = False
+
+    On Error Resume Next
+
+    If preferWinHttp Then
+        Set CreateHttpClient = CreateObject("WinHttp.WinHttpRequest.5.1")
+        If Not CreateHttpClient Is Nothing Then
+            usingWinHttp = True
+            On Error GoTo 0
+            Exit Function
+        End If
+
+        Err.Clear
+        Set CreateHttpClient = CreateObject("MSXML2.ServerXMLHTTP.6.0")
+        usingWinHttp = False
+    Else
+        Set CreateHttpClient = CreateObject("MSXML2.ServerXMLHTTP.6.0")
+        If Not CreateHttpClient Is Nothing Then
+            usingWinHttp = False
+            On Error GoTo 0
+            Exit Function
+        End If
+
+        Err.Clear
+        Set CreateHttpClient = CreateObject("WinHttp.WinHttpRequest.5.1")
+        usingWinHttp = Not CreateHttpClient Is Nothing
+    End If
+
+    On Error GoTo 0
+End Function
+
+Private Function ApplySECHeaders(ByVal http As Object, ByRef errCode As String, ByRef errMsg As String) As Boolean
+    ApplySECHeaders = False
+    errCode = ""
+    errMsg = ""
+
+    On Error Resume Next
+    http.SetRequestHeader "User-Agent", HTTP_USER_AGENT
+    If Err.Number <> 0 Then
+        Err.Clear
+        On Error GoTo 0
+        errCode = ERR_NO_NETWORK
+        errMsg = "Failed to set SEC User-Agent header. Restart Excel and retry."
+        Exit Function
+    End If
+
+    http.SetRequestHeader "Accept", "application/json"
+    http.SetRequestHeader "Accept-Encoding", "gzip, deflate"
+
+    Dim contactEmail As String
+    contactEmail = ExtractContactEmail(HTTP_USER_AGENT)
+    If Len(contactEmail) > 0 Then
+        http.SetRequestHeader "From", contactEmail
+    End If
+
+    On Error GoTo 0
+    ApplySECHeaders = True
+End Function
+
+Private Function ExtractContactEmail(ByVal userAgent As String) As String
+    ExtractContactEmail = ""
+
+    Dim parts() As String
+    parts = Split(Trim$(userAgent), " ")
+
+    If UBound(parts) >= 0 Then
+        Dim candidate As String
+        candidate = parts(UBound(parts))
+        If InStr(1, candidate, "@", vbTextCompare) > 0 Then
+            ExtractContactEmail = candidate
+        End If
+    End If
+End Function
     Application.StatusBar = False
     errCode = ERR_NO_NETWORK
     errMsg = "Cannot connect to SEC servers. Check your internet connection."

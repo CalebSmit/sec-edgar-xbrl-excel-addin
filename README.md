@@ -11,6 +11,7 @@ No sign-up, no subscriptions, no backend — data comes straight from the SEC.
 - SEC ISO dates are parsed in a locale-independent way to avoid regional date issues.
 - `Ctrl + Shift + S` shortcut now targets the add-in macro explicitly.
 - HTTP requests now use a compliant SEC identity string (`AppName email`).
+- User-Agent identity now avoids noreply addresses that can trigger SEC HTTP 403 blocks.
 - HTTP transport now auto-retries transient `403/429/5xx` SEC responses with exponential backoff + jitter.
 - `Retry-After` response headers are respected when SEC provides them.
 - Ticker map lookups now use in-memory caching to reduce repeated SEC requests.
