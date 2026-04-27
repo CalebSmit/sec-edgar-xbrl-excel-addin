@@ -1,113 +1,109 @@
-SEC EDGAR XBRL Financial Statements — Excel Add-in
-Version 1.0.0
-====================================================
+SEC EDGAR XBRL Excel Add-in — Installation Guide
+=================================================
 
-WHAT THIS DOES
---------------
-Enter a stock ticker (like AAPL, MSFT, TSLA) and this add-in fetches
-real financial statement data directly from the SEC EDGAR database and
-fills in three worksheets:
+IMPORTANT: Follow every step in order. Skipping any step is the reason
+the ribbon tab does not appear or Excel says "cannot access the file."
 
-  • Income Statement  (annual + quarterly)
-  • Balance Sheet     (annual + quarterly)
-  • Cash Flow         (annual + quarterly)
+------------------------------------------------------------------
+STEP 1 — Save the file to your Documents folder
+------------------------------------------------------------------
 
-No subscriptions. No sign-up. No internet account needed.
-Data comes straight from SEC EDGAR — the official US government filing database.
+Download SEC_XBRL_Addin.xlam and save it here:
 
-REQUIREMENTS
-------------
-  • Windows PC (Windows 10 or 11)
-  • Microsoft Excel 2016 or newer (Microsoft 365 also works)
-  • Internet connection (to fetch SEC data)
+    C:\Users\YourName\Documents\SEC_XBRL_Addin.xlam
 
-INSTALL — 4 STEPS
------------------
+Do NOT save it to:
+  x  Your Desktop
+  x  OneDrive or any synced folder
+  x  The root of C:\ (e.g. C:\SEC_XBRL_Addin.xlam)
+  x  Any network or USB drive
 
-STEP 1: Save the add-in file
-  Copy "SEC_XBRL_Addin.xlam" to a folder on your computer.
-  Suggested: C:\Users\YourName\Documents\ExcelAddins\
+Only a plain local folder like Documents will work.
 
-STEP 2: Install it in Excel
-  1. Open Excel (any workbook, or a blank one)
-  2. Click the FILE tab (top-left)
-  3. Click Options (near the bottom of the left menu)
-  4. In the Excel Options window, click Add-ins (left sidebar)
-  5. At the bottom, next to "Manage:", make sure it says "Excel Add-ins"
-  6. Click the Go... button
-  7. In the Add-Ins window, click Browse...
-  8. Navigate to the folder where you saved SEC_XBRL_Addin.xlam
-  9. Select SEC_XBRL_Addin.xlam and click OK
-  10. You should now see "SEC_XBRL_Addin" in the list with a checkmark
-  11. Click OK
+------------------------------------------------------------------
+STEP 2 — Unblock the file (REQUIRED after every download)
+------------------------------------------------------------------
 
-STEP 3: Enable macros (if prompted)
-  When you first open the add-in, Excel may show a security bar saying
-  "Macros have been disabled." Click "Enable Content" or "Enable Macros."
-  This is required for the add-in to work.
+Windows marks every downloaded file as "untrusted." You must
+manually unblock it or Excel will refuse to run it.
 
-  If Excel blocks it entirely:
-  1. Go to File > Options > Trust Center > Trust Center Settings
-  2. Click Macro Settings
-  3. Select "Disable all macros with notification"
-  4. Click OK, then re-open the add-in
+  1. Open File Explorer and navigate to your Documents folder
+  2. Right-click on SEC_XBRL_Addin.xlam
+  3. Click Properties
+  4. At the very bottom of the General tab, look for a line that
+     says "Security: This file came from another computer..."
+  5. Check the box next to "Unblock"
+  6. Click OK
 
-STEP 4: Use it!
-  Once installed, you have two ways to pull data:
+If you do not see an "Unblock" checkbox, the file is already
+trusted and you can skip to Step 3.
 
-  OPTION A — Keyboard shortcut (fastest):
-    Press Ctrl + Shift + S
-    Type a ticker (e.g. AAPL) and press Enter
+------------------------------------------------------------------
+STEP 3 — Add your Documents folder as a Trusted Location
+------------------------------------------------------------------
 
-  OPTION B — Macro:
-    Press Alt + F8
-    Select "PullSECFinancials"
-    Click Run
-    Type a ticker and press Enter
+Excel requires the folder containing the add-in to be explicitly
+trusted, or it will load silently without the ribbon tab.
 
-  OPTION C — Add-ins ribbon tab:
-    Click the "Add-ins" tab in the Excel ribbon
-    Click "Pull SEC Financials"
-    Type a ticker and press Enter
+  1. Open Excel (do not open any file, just the blank Excel window)
+  2. Click File → Options
+  3. Click "Trust Center" in the left sidebar
+  4. Click "Trust Center Settings..." button on the right
+  5. Click "Trusted Locations" in the left sidebar
+  6. Click "Add new location..."
+  7. Click "Browse..." and navigate to your Documents folder
+     (C:\Users\YourName\Documents)
+  8. Click OK → OK → OK to close all dialogs
 
-  Note: The ribbon button (Option C) requires an extra setup step using
-  the Office RibbonX Editor. Options A and B work without it.
+------------------------------------------------------------------
+STEP 4 — Install the add-in
+------------------------------------------------------------------
 
-UNINSTALL
----------
-  1. Go to File > Options > Add-ins
-  2. Click Go... next to "Excel Add-ins"
-  3. Uncheck "SEC_XBRL_Addin" and click OK
+  1. In Excel, click File → Options
+  2. Click "Add-ins" in the left sidebar
+  3. At the bottom, the "Manage:" dropdown must say "Excel Add-ins"
+     (NOT "COM Add-ins", NOT "Automation" — those show .dll files
+     and will not work)
+  4. Click "Go..."
+  5. Click "Browse..."
+  6. Navigate to Documents and select SEC_XBRL_Addin.xlam
+  7. Click OK
+  8. Make sure the checkbox next to "SEC XBRL Addin" is checked
+  9. Click OK
 
+------------------------------------------------------------------
+STEP 5 — Confirm it worked
+------------------------------------------------------------------
+
+A new tab called "SEC EDGAR" will appear in the Excel ribbon.
+
+Click it, then click "Pull SEC Financials", type a ticker like
+AAPL or MSFT, and press Enter.
+
+------------------------------------------------------------------
 TROUBLESHOOTING
----------------
-  "Ticker not found"
-    → Check spelling. Use the official ticker (e.g. BRK-B not BRKB).
-    → The add-in uses the same tickers as SEC EDGAR.
+------------------------------------------------------------------
 
-  "Cannot connect to SEC servers"
-    → Check your internet connection.
-    → SEC EDGAR may be temporarily down. Try again in a few minutes.
+Problem: "Microsoft Excel cannot access the file"
+Fix: The file is in a bad location (Desktop, OneDrive, C:\ root,
+     or a network drive). Move it to Documents and repeat Step 4.
 
-  "No US-GAAP XBRL data found"
-    → This company does not file US-GAAP XBRL with the SEC.
-    → Usually means non-US companies or very small filers.
+Problem: "This file type is not supported in Protected View"
+Fix: You skipped Step 2. Right-click the file → Properties →
+     check Unblock → OK. Then repeat Step 4.
 
-  Nothing happens when I press Ctrl+Shift+S
-    → The add-in may not be installed. Repeat Step 2 above.
-    → Make sure macros are enabled (Step 3 above).
+Problem: The "SEC EDGAR" tab does not appear after installing
+Fix: You skipped Step 3. Add your Documents folder as a Trusted
+     Location, then close and reopen Excel.
 
-DATA NOTES
-----------
-  • Data comes directly from SEC EDGAR with no modifications.
-  • Annual data = 10-K filings. Quarterly = 10-Q filings (Q1, Q2, Q3 only).
-  • Q4 does not appear in the quarterly section (it is not filed separately).
-  • XBRL concept names are shown as filed (e.g. "RevenueFromContractWithCustomer...").
-  • Large companies (Apple, JPMorgan) may take 15–30 seconds — this is normal.
+Problem: The checkbox in Step 4 is greyed out / won't stay checked
+Fix: Close Excel completely. Reopen it WITHOUT opening any file.
+     Then repeat Step 4.
 
-SOURCE & LICENSE
-----------------
-  Source code: https://github.com/CalebSmit/sec-edgar-xbrl-excel-addin
-  License: MIT
-  VBA-JSON library (bundled): MIT license, by Tim Hall
-    https://github.com/VBA-tools/VBA-JSON
+------------------------------------------------------------------
+UNINSTALLING
+------------------------------------------------------------------
+
+  1. File → Options → Add-ins → Manage: Excel Add-ins → Go
+  2. Uncheck "SEC XBRL Addin" → OK
+  3. Delete SEC_XBRL_Addin.xlam from your Documents folder

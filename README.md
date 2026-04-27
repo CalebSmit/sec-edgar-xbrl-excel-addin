@@ -9,45 +9,89 @@ No sign-up, no subscriptions, no backend — data comes straight from the SEC.
 
 ## Download & Install
 
-### Step 1 — Download the add-in
-
 **[⬇ Download SEC_XBRL_Addin.xlam](https://github.com/CalebSmit/sec-edgar-xbrl-excel-addin/raw/master/dist/SEC_XBRL_Addin.xlam)**
 
-> Save `SEC_XBRL_Addin.xlam` to a folder on your computer (e.g. `Documents\ExcelAddins\`).  
-> Do **not** open it directly from your browser — right-click and choose **Save link as**, or save it after your browser downloads it.
+> ⚠️ **Follow all 4 steps below in order.** Skipping any step is the most common reason the ribbon tab does not appear.
 
 ---
 
-### Step 2 — Install in Excel
+### Step 1 — Save to your Documents folder
 
-1. Open Excel
-2. Click **File → Options**
-3. Click **Add-ins** in the left sidebar
-4. At the bottom, make sure **"Excel Add-ins"** is selected → click **Go...**
+Save `SEC_XBRL_Addin.xlam` to:
+
+```
+C:\Users\YourName\Documents\SEC_XBRL_Addin.xlam
+```
+
+**Do NOT save it to:**
+- ❌ Your Desktop
+- ❌ OneDrive or any synced/cloud folder
+- ❌ The root of C:\ (e.g. `C:\SEC_XBRL_Addin.xlam`)
+- ❌ A USB or network drive
+
+Only a plain local folder like Documents will work reliably.
+
+---
+
+### Step 2 — Unblock the file *(required after every download)*
+
+Windows marks every downloaded file as untrusted. You must unblock it manually, or Excel will refuse to run it and show a "Protected View" error.
+
+1. Open **File Explorer** → go to your Documents folder
+2. **Right-click** `SEC_XBRL_Addin.xlam` → click **Properties**
+3. On the **General** tab, look at the very bottom for a **Security** section
+4. Check the box next to **"Unblock"** → click **OK**
+
+> If there is no Unblock checkbox, the file is already trusted — skip to Step 3.
+
+---
+
+### Step 3 — Add Documents as a Trusted Location
+
+Even after installing, Excel will silently load the add-in without its ribbon tab unless the folder is explicitly trusted. This is a Microsoft security requirement since 2016.
+
+1. Open Excel (no file open — just the blank Excel window)
+2. **File → Options**
+3. Click **Trust Center** → click **Trust Center Settings...**
+4. Click **Trusted Locations** → click **Add new location...**
+5. Click **Browse...** → select your **Documents** folder → click **OK**
+6. Click **OK → OK → OK** to close all dialogs
+
+---
+
+### Step 4 — Install the add-in
+
+1. In Excel: **File → Options**
+2. Click **Add-ins** in the left sidebar
+3. At the bottom, the **Manage:** dropdown must say **"Excel Add-ins"**
+   *(not "COM Add-ins" or "Automation" — those show .dll files and won't work)*
+4. Click **Go...**
 5. Click **Browse...**
-6. Navigate to where you saved `SEC_XBRL_Addin.xlam` → select it → click **OK**
-7. Make sure **SEC_XBRL_Addin** is checked → click **OK**
+6. Navigate to your **Documents** folder → select `SEC_XBRL_Addin.xlam` → click **OK**
+7. Make sure the checkbox next to **SEC XBRL Addin** is checked → click **OK**
+
+The **SEC EDGAR** tab will now appear in your ribbon.
 
 ---
 
-### Step 3 — Enable macros (if prompted)
+### Troubleshooting
 
-If Excel shows a yellow bar saying "Macros have been disabled" → click **Enable Content**.
-
-If Excel blocks macros entirely:
-1. **File → Options → Trust Center → Trust Center Settings**
-2. Click **Macro Settings**
-3. Select **"Disable all macros with notification"** → OK
+| Problem | Fix |
+|---------|-----|
+| "Microsoft Excel cannot access the file" | File is in a bad location (Desktop, OneDrive, C:\ root). Move it to Documents and repeat Step 4. |
+| "This file type is not supported in Protected View" | You skipped Step 2. Right-click the file → Properties → check **Unblock** → OK. Repeat Step 4. |
+| SEC EDGAR tab does not appear | You skipped Step 3. Add your Documents folder as a Trusted Location, then close and reopen Excel. |
+| Checkbox in Step 4 is greyed out | Close Excel completely. Reopen it without opening any file. Then repeat Step 4. |
 
 ---
 
-### Step 4 — Use it
+### Step 5 — Use it
 
 | Method | How |
 |--------|-----|
+| **Ribbon** | Click **Pull SEC Financials** in the **SEC EDGAR** tab |
 | **Keyboard** | Press `Ctrl + Shift + S` → type a ticker → Enter |
 | **Macro** | `Alt + F8` → select `PullSECFinancials` → Run → type a ticker |
-| **Ribbon button** | Click **Pull SEC Financials** in the **SEC EDGAR** tab *(requires extra setup — see below)* |
 
 Enter any US stock ticker: `AAPL`, `MSFT`, `TSLA`, `JPM`, `GOOGL`, `BRK-B`, etc.
 
