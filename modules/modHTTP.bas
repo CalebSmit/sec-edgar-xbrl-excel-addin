@@ -1,17 +1,17 @@
 Attribute VB_Name = "modHTTP"
 '==============================================================================
-' modHTTP — HTTP GET requests with User-Agent header, timeouts, error handling
-' PRD §3, §4.5, §5.1 | Phase 1 (foundation) + Phase 2 (companyfacts fetch)
+' modHTTP  -  HTTP GET requests with User-Agent header, timeouts, error handling
+' PRD S3, S4.5, S5.1 | Phase 1 (foundation) + Phase 2 (companyfacts fetch)
 '
 ' Transport: WinHttp.WinHttpRequest.5.1 (standard Windows COM, no extra refs)
 '   Falls back to MSXML2.ServerXMLHTTP.6.0 if WinHttp unavailable.
 '
-' SEC requirements (PRD §3):
+' SEC requirements (PRD S3):
 '   - User-Agent: "SECExcelAddin contact@example.com"
 '   - Rate cap: 5 req/sec (enforced via 200ms sleep between calls)
 '   - HTTPS only
 '
-' VERIFIED field names / endpoints: none referenced here — this module is
+' VERIFIED field names / endpoints: none referenced here  -  this module is
 ' purely transport. Endpoints are in modConfig.
 '==============================================================================
 Option Explicit
@@ -30,9 +30,9 @@ Option Explicit
 ' On any failure sets errCode (modConfig ERR_* constant) + errMsg and returns "".
 '
 ' Parameters:
-'   url     — full HTTPS URL
-'   errCode — output: "" on success; ERR_* on failure
-'   errMsg  — output: user-facing message for MsgBox
+'   url      -  full HTTPS URL
+'   errCode  -  output: "" on success; ERR_* on failure
+'   errMsg   -  output: user-facing message for MsgBox
 '------------------------------------------------------------------------------
 Public Function GetHTTP(ByVal url As String, _
                         ByRef errCode As String, _
@@ -72,7 +72,7 @@ Public Function GetHTTP(ByVal url As String, _
                          HTTP_TIMEOUT_MS, HTTP_TIMEOUT_MS
     End If
 
-    ' SEC-required headers (PRD §3)
+    ' SEC-required headers (PRD S3)
     http.SetRequestHeader "User-Agent", HTTP_USER_AGENT
     http.SetRequestHeader "Accept", "application/json"
 
@@ -112,7 +112,7 @@ End Function
 
 '------------------------------------------------------------------------------
 ' RateLimitedGet
-' Enforces the 200ms inter-request delay (5 req/sec cap, PRD §3) using the
+' Enforces the 200ms inter-request delay (5 req/sec cap, PRD S3) using the
 ' kernel32 Sleep function for millisecond-accurate delay, then calls GetHTTP.
 '------------------------------------------------------------------------------
 Public Function RateLimitedGet(ByVal url As String, _
@@ -132,9 +132,9 @@ End Function
 '
 ' Verified endpoint (live test 2026-04-27):
 '   https://data.sec.gov/api/xbrl/companyfacts/CIK0000320193.json
-'   → top keys: ["cik", "entityName", "facts"]
-'   → facts keys: ["dei", "us-gaap"]
-'   → AAPL has 503 us-gaap concepts, 24,492 total facts
+'   -> top keys: ["cik", "entityName", "facts"]
+'   -> facts keys: ["dei", "us-gaap"]
+'   -> AAPL has 503 us-gaap concepts, 24,492 total facts
 '------------------------------------------------------------------------------
 Public Function FetchCompanyFacts(ByVal cik10 As String, _
                                   ByRef errCode As String, _

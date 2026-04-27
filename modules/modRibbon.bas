@@ -1,11 +1,11 @@
 Attribute VB_Name = "modRibbon"
 '==============================================================================
-' modRibbon — Custom Ribbon callback and keyboard shortcut registration
-' PRD §4.1 FR-1 | Phase 5
+' modRibbon  -  Custom Ribbon callback and keyboard shortcut registration
+' PRD S4.1 FR-1 | Phase 5
 '
 ' The Ribbon button (defined in customUI/customUI14.xml) calls
 ' RibbonCallback_PullSECFinancials. The IRibbonControl parameter is
-' required by the Office Ribbon callback contract — it is accepted but unused.
+' required by the Office Ribbon callback contract  -  it is accepted but unused.
 '
 ' For users who have not installed the Custom UI XML, the add-in also
 ' registers Ctrl+Shift+S as a keyboard shortcut via Auto_Open.
@@ -22,7 +22,7 @@ Option Explicit
 ' The ribbonControl As Object parameter is required by the callback contract.
 '------------------------------------------------------------------------------
 Public Sub RibbonCallback_PullSECFinancials(ByVal ribbonControl As Object)
-    ' Delegate to the main entry point — same code path as manual macro run
+    ' Delegate to the main entry point  -  same code path as manual macro run
     PullSECFinancials
 End Sub
 
@@ -33,7 +33,7 @@ End Sub
 ' Unregistered on Workbook_BeforeClose to avoid conflict.
 '------------------------------------------------------------------------------
 Public Sub RegisterShortcut()
-    ' Ctrl+Shift+S → PullSECFinancials
+    ' Ctrl+Shift+S -> PullSECFinancials
     Application.OnKey "^+S", "PullSECFinancials"
 End Sub
 
@@ -42,5 +42,5 @@ End Sub
 ' Clears the Ctrl+Shift+S shortcut registration on close.
 '------------------------------------------------------------------------------
 Public Sub UnregisterShortcut()
-    Application.OnKey "^+S"    ' No second argument → resets to default behaviour
+    Application.OnKey "^+S"    ' No second argument -> resets to default behaviour
 End Sub

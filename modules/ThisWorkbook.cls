@@ -8,12 +8,12 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = True
 '==============================================================================
-' ThisWorkbook — Workbook-level event handlers for SEC EDGAR XBRL Add-in
-' PRD §4.1 FR-1 | Phase 5
+' ThisWorkbook  -  Workbook-level event handlers for SEC EDGAR XBRL Add-in
+' PRD S4.1 FR-1 | Phase 5
 '
 ' In a .xlam add-in, ThisWorkbook events fire when the add-in loads/unloads.
-' Workbook_Open  → registers keyboard shortcut
-' Workbook_BeforeClose → unregisters shortcut
+' Workbook_Open  -> registers keyboard shortcut
+' Workbook_BeforeClose -> unregisters shortcut
 '==============================================================================
 Option Explicit
 

@@ -1,8 +1,8 @@
 Attribute VB_Name = "modClassifier"
 '==============================================================================
-' modClassifier — Classify us-gaap concept names into IS / BS / CFS buckets
+' modClassifier  -  Classify us-gaap concept names into IS / BS / CFS buckets
 ' and orchestrate full concept extraction from a parsed us-gaap Dictionary.
-' PRD §4.3 | Phase 3
+' PRD S4.3 | Phase 3
 '
 ' VERIFIED keyword behavior (2026-04-27, live AAPL 503 concepts):
 '   IS:   120 concepts (10/10 spot-checks pass)
@@ -13,27 +13,27 @@ Attribute VB_Name = "modClassifier"
 '==============================================================================
 Option Explicit
 
-' Bucket constants — return values from ClassifyConcept
+' Bucket constants  -  return values from ClassifyConcept
 Public Const BUCKET_IS As String = "IS"
 Public Const BUCKET_BS As String = "BS"
 Public Const BUCKET_CFS As String = "CFS"
 Public Const BUCKET_SKIP As String = "SKIP"
 
 '==============================================================================
-' SECTION 1 — Core Classification
+' SECTION 1  -  Core Classification
 '==============================================================================
 
 '------------------------------------------------------------------------------
 ' ClassifyConcept
 ' Maps a us-gaap concept name to IS / BS / CFS / SKIP.
 '
-' Algorithm (PRD §4.3):
+' Algorithm (PRD S4.3):
 '   Priority IS > CFS > BS. Case-insensitive substring match.
 '   'dei' namespace filtering handled by caller (ClassifyAllConcepts).
 '
 ' Parameters:
-'   conceptName    — raw XBRL concept name (e.g. "NetIncomeLoss")
-'   matchedKeyword — output: the keyword that triggered the match (or "" for SKIP)
+'   conceptName     -  raw XBRL concept name (e.g. "NetIncomeLoss")
+'   matchedKeyword  -  output: the keyword that triggered the match (or "" for SKIP)
 '------------------------------------------------------------------------------
 Public Function ClassifyConcept(ByVal conceptName As String, _
                                 Optional ByRef matchedKeyword As String = "") As String
@@ -64,7 +64,7 @@ Public Function ClassifyConcept(ByVal conceptName As String, _
         Exit Function
     End If
     
-    ' --- No match → SKIP ----------------------------------------------------
+    ' --- No match -> SKIP ----------------------------------------------------
     matchedKeyword = ""
     ClassifyConcept = BUCKET_SKIP
 End Function
@@ -76,9 +76,9 @@ End Function
 ' string if matched; returns "" if no match.
 '
 ' Parameters:
-'   nameLower    — LCase(conceptName) — already lowercased for speed
-'   keywordConst — one of KEYWORDS_IS / KEYWORDS_CFS / KEYWORDS_BS
-'   matchedOut   — output: the matching keyword in its original case
+'   nameLower     -  LCase(conceptName)  -  already lowercased for speed
+'   keywordConst  -  one of KEYWORDS_IS / KEYWORDS_CFS / KEYWORDS_BS
+'   matchedOut    -  output: the matching keyword in its original case
 '------------------------------------------------------------------------------
 Private Function CheckKeywordList(ByVal nameLower As String, _
                                   ByVal keywordConst As String, _
@@ -104,7 +104,7 @@ Private Function CheckKeywordList(ByVal nameLower As String, _
 End Function
 
 '==============================================================================
-' SECTION 2 — Full Concept Extraction and Separation
+' SECTION 2  -  Full Concept Extraction and Separation
 '==============================================================================
 
 '------------------------------------------------------------------------------
@@ -113,12 +113,12 @@ End Function
 ' Stored in a Collection; passed to modExcelWriter.
 '
 ' Fields:
-'   ConceptName   — exact XBRL tag (e.g. "NetIncomeLoss")
-'   Bucket        — IS / BS / CFS
-'   MatchedKW     — which keyword triggered (for audit/debug)
-'   AnnualData    — Scripting.Dictionary: end_date → fact Dictionary (deduped)
-'   QuarterlyData — Scripting.Dictionary: end_date → fact Dictionary (deduped)
-'   Units         — e.g. "USD", "USD/shares", "shares", "pure"
+'   ConceptName    -  exact XBRL tag (e.g. "NetIncomeLoss")
+'   Bucket         -  IS / BS / CFS
+'   MatchedKW      -  which keyword triggered (for audit/debug)
+'   AnnualData     -  Scripting.Dictionary: end_date -> fact Dictionary (deduped)
+'   QuarterlyData  -  Scripting.Dictionary: end_date -> fact Dictionary (deduped)
+'   Units          -  e.g. "USD", "USD/shares", "shares", "pure"
 '                   (first unit key only; multi-unit concepts use USD preferentially)
 '------------------------------------------------------------------------------
 Public Type ConceptRecord
@@ -141,10 +141,10 @@ End Type
 '   "ConceptName", "Bucket", "MatchedKW", "AnnualData", "QuarterlyData", "Units"
 '
 ' Parameters:
-'   usGaap        — the us-gaap Scripting.Dictionary from parsed JSON
-'   isCollection  — output Collection of IS concept Dicts
-'   bsCollection  — output Collection of BS concept Dicts
-'   cfsCollection — output Collection of CFS concept Dicts
+'   usGaap         -  the us-gaap Scripting.Dictionary from parsed JSON
+'   isCollection   -  output Collection of IS concept Dicts
+'   bsCollection   -  output Collection of BS concept Dicts
+'   cfsCollection  -  output Collection of CFS concept Dicts
 '
 ' Counts returned via optional ByRef params for status display.
 '------------------------------------------------------------------------------
@@ -167,7 +167,7 @@ Public Sub ClassifyAllConcepts(ByVal usGaap As Object, _
         Dim cName As String
         cName = CStr(conceptName)
         
-        ' Skip dei namespace concepts (PRD §4.3) — handled in caller by
+        ' Skip dei namespace concepts (PRD S4.3)  -  handled in caller by
         ' GetUSGAAP which returns only us-gaap; but guard here too.
         ' Also skip any empty concept names.
         If Len(cName) = 0 Then GoTo NextConcept
@@ -293,7 +293,7 @@ Public Function SelectPreferredUnit(ByVal unitsDict As Object) As String
 End Function
 
 '==============================================================================
-' SECTION 3 — Verification Utilities (Phase 3 test macro support)
+' SECTION 3  -  Verification Utilities (Phase 3 test macro support)
 '==============================================================================
 
 '------------------------------------------------------------------------------
@@ -305,7 +305,7 @@ End Function
 ' Caller writes this array to a sheet.
 '------------------------------------------------------------------------------
 Public Function GetClassificationTable() As Variant
-    ' 30 rows × 4 columns: ConceptName, ExpectedBucket, GotBucket, MatchedKW
+    ' 30 rows x 4 columns: ConceptName, ExpectedBucket, GotBucket, MatchedKW
     Dim tbl(1 To 30, 1 To 5) As Variant
     
     ' Define the 30 verification concepts with expected buckets

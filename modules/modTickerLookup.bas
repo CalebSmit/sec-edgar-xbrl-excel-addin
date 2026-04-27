@@ -1,7 +1,7 @@
 Attribute VB_Name = "modTickerLookup"
 '==============================================================================
-' modTickerLookup — Resolve a ticker symbol to a 10-digit zero-padded CIK
-' PRD §4.2, §4.5 | Phase 1
+' modTickerLookup  -  Resolve a ticker symbol to a 10-digit zero-padded CIK
+' PRD S4.2, S4.5 | Phase 1
 '
 ' SEC company_tickers.json structure (verified 2026-04-27):
 '   {
@@ -11,9 +11,9 @@ Attribute VB_Name = "modTickerLookup"
 '   }
 '
 ' Key fields used:
-'   cik_str  — integer CIK (NOT zero-padded in the JSON)
-'   ticker   — uppercase ticker string
-'   title    — company name (used for display only)
+'   cik_str   -  integer CIK (NOT zero-padded in the JSON)
+'   ticker    -  uppercase ticker string
+'   title     -  company name (used for display only)
 '
 ' VERIFIED: cik_str is an integer in JSON, ticker is uppercase.
 ' Zero-padding to 10 digits is applied in FormatCIK() below.
@@ -28,10 +28,10 @@ Option Explicit
 ' Returns "" and sets errCode/errMsg on any failure.
 '
 ' Parameters:
-'   ticker      — any case (e.g. "aapl", "AAPL", "Aapl")
-'   errCode     — output: "" on success, ERR_* constant on failure
-'   errMsg      — output: user-facing error message
-'   companyName — output: entity name from SEC (for display)
+'   ticker       -  any case (e.g. "aapl", "AAPL", "Aapl")
+'   errCode      -  output: "" on success, ERR_* constant on failure
+'   errMsg       -  output: user-facing error message
+'   companyName  -  output: entity name from SEC (for display)
 '------------------------------------------------------------------------------
 Public Function ResolveTicker(ByVal ticker As String, _
                               ByRef errCode As String, _
@@ -55,7 +55,7 @@ Public Function ResolveTicker(ByVal ticker As String, _
     ' Update status bar (PRD FR-3)
     Application.StatusBar = "Resolving ticker: " & tickerUC & "..."
     
-    ' --- Fetch the ticker→CIK mapping file ---------------------------------
+    ' --- Fetch the ticker->CIK mapping file ---------------------------------
     Dim httpErr As String, httpMsg As String
     Dim jsonText As String
     jsonText = RateLimitedGet(SEC_TICKER_URL, httpErr, httpMsg)
@@ -100,7 +100,7 @@ Public Function ResolveTicker(ByVal ticker As String, _
         ' entry("ticker") is uppercase in the SEC file (verified)
         If entry.Exists("ticker") Then
             If UCase(entry("ticker")) = tickerUC Then
-                ' Found — extract CIK integer and format to 10-digit string
+                ' Found  -  extract CIK integer and format to 10-digit string
                 Dim cikInt As Long
                 cikInt = CLng(entry("cik_str"))
                 ResolveTicker = FormatCIK(cikInt)
@@ -132,7 +132,7 @@ End Function
 '------------------------------------------------------------------------------
 ' FormatCIK
 ' Converts an integer CIK to a 10-digit zero-padded string.
-' E.g., 320193 → "0000320193"
+' E.g., 320193 -> "0000320193"
 ' VERIFIED: SEC companyfacts endpoint requires exactly 10 digits.
 '------------------------------------------------------------------------------
 Public Function FormatCIK(ByVal cikInt As Long) As String

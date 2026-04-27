@@ -1,9 +1,9 @@
 Attribute VB_Name = "modExcelWriter"
 '==============================================================================
-' modExcelWriter — Create / clear three worksheets and write XBRL data
-' PRD §4.4 | Phase 4
+' modExcelWriter  -  Create / clear three worksheets and write XBRL data
+' PRD S4.4 | Phase 4
 '
-' LAYOUT (same pattern for IS, BS, CFS tabs — PRD §4.4):
+' LAYOUT (same pattern for IS, BS, CFS tabs  -  PRD S4.4):
 '
 '   Row 1   Col A: "=== ANNUAL (10-K) ==="
 '   Row 2   Col A: "XBRL Tag"  Col B: "Unit"  Col C+: period end-dates (ISO, sorted asc)
@@ -13,22 +13,22 @@ Attribute VB_Name = "modExcelWriter"
 '   Row N+1 Col A: "XBRL Tag"  Col B: "Unit"  Col C+: quarterly end-dates (sorted asc)
 '   Row N+2+ same concept rows, quarterly values
 '
-' DATA INTEGRITY (PRD §4.6):
-'   - Every numeric cell value = CDbl(fact["val"]) from SEC JSON — no transformation
-'   - Empty cells STAY EMPTY — no zero-fill, no interpolation (FR-14)
-'   - Concept names written exactly as XBRL tag — no renaming (FR-13)
+' DATA INTEGRITY (PRD S4.6):
+'   - Every numeric cell value = CDbl(fact["val"]) from SEC JSON  -  no transformation
+'   - Empty cells STAY EMPTY  -  no zero-fill, no interpolation (FR-14)
+'   - Concept names written exactly as XBRL tag  -  no renaming (FR-13)
 '   - String column headers = ISO end-date strings from JSON "end" field
 '
 ' NUMERIC HANDLING:
-'   - VBA Long max = 2,147,483,647. AAPL values reach 416,161,000,000 → overflow
-'   - SOLUTION: ALL numeric vals written as CDbl() → VBA Double (53-bit mantissa)
+'   - VBA Long max = 2,147,483,647. AAPL values reach 416,161,000,000 -> overflow
+'   - SOLUTION: ALL numeric vals written as CDbl() -> VBA Double (53-bit mantissa)
 '   - Double can represent integers up to 2^53 = 9,007,199,254,740,992 exactly
 '   - EPS floats (e.g. 4.04) also handled correctly by Double
 '==============================================================================
 Option Explicit
 
 '==============================================================================
-' SECTION 1 — Worksheet Management
+' SECTION 1  -  Worksheet Management
 '==============================================================================
 
 '------------------------------------------------------------------------------
@@ -45,8 +45,8 @@ End Sub
 
 '------------------------------------------------------------------------------
 ' CreateOrClearSheet
-' If a sheet with the given name exists → clear all cells and formatting.
-' If it doesn't exist → create it.
+' If a sheet with the given name exists -> clear all cells and formatting.
+' If it doesn't exist -> create it.
 '------------------------------------------------------------------------------
 Private Sub CreateOrClearSheet(ByVal wb As Workbook, ByVal sheetName As String)
     Dim ws As Worksheet
@@ -66,7 +66,7 @@ Private Sub CreateOrClearSheet(ByVal wb As Workbook, ByVal sheetName As String)
 End Sub
 
 '==============================================================================
-' SECTION 2 — Main Write Orchestrator
+' SECTION 2  -  Main Write Orchestrator
 '==============================================================================
 
 '------------------------------------------------------------------------------
@@ -75,11 +75,11 @@ End Sub
 ' Writes data to all three sheets.
 '
 ' Parameters:
-'   wb            — target workbook (ThisWorkbook for .xlam callers)
-'   isCollection  — Collection of IS concept Dicts from modClassifier
-'   bsCollection  — Collection of BS concept Dicts
-'   cfsCollection — Collection of CFS concept Dicts
-'   ticker        — for sheet tab metadata (not written to cells — future use)
+'   wb             -  target workbook (ThisWorkbook for .xlam callers)
+'   isCollection   -  Collection of IS concept Dicts from modClassifier
+'   bsCollection   -  Collection of BS concept Dicts
+'   cfsCollection  -  Collection of CFS concept Dicts
+'   ticker         -  for sheet tab metadata (not written to cells  -  future use)
 '------------------------------------------------------------------------------
 Public Sub WriteAllSheets(ByVal wb As Workbook, _
                           ByVal isCollection As Collection, _
@@ -90,7 +90,7 @@ Public Sub WriteAllSheets(ByVal wb As Workbook, _
     ShowProgress "Initializing worksheets..."
     InitWorksheets wb
 
-    ' Write each sheet — use modProgress constants (PRD FR-3)
+    ' Write each sheet  -  use modProgress constants (PRD FR-3)
     ShowProgress PROG_WRITING_IS
     WriteSheet wb.Worksheets(WS_INCOME_STMT), isCollection
 
@@ -107,7 +107,7 @@ Public Sub WriteAllSheets(ByVal wb As Workbook, _
 End Sub
 
 '==============================================================================
-' SECTION 3 — Single-Sheet Writer
+' SECTION 3  -  Single-Sheet Writer
 '==============================================================================
 
 '------------------------------------------------------------------------------
@@ -115,10 +115,10 @@ End Sub
 ' Writes annual + quarterly sections to one worksheet.
 '
 ' Algorithm:
-'   1. Collect ALL unique annual end-dates across all concepts → sort → col headers
+'   1. Collect ALL unique annual end-dates across all concepts -> sort -> col headers
 '   2. Write annual section (rows 1..N)
 '   3. Write blank gap row
-'   4. Collect ALL unique quarterly end-dates → sort → col headers
+'   4. Collect ALL unique quarterly end-dates -> sort -> col headers
 '   5. Write quarterly section
 '
 ' The same concept Collection is used for both sections; a concept that has
@@ -133,7 +133,7 @@ Private Sub WriteSheet(ByVal ws As Worksheet, ByVal concepts As Collection)
     Application.Calculation = xlCalculationManual
 
     ' --- 1. Collect all unique end-dates -----------------------------------
-    Dim allAnnualDates As Object   ' Scripting.Dictionary: date → True (used as set)
+    Dim allAnnualDates As Object   ' Scripting.Dictionary: date -> True (used as set)
     Dim allQtrDates As Object
     Set allAnnualDates = CreateObject("Scripting.Dictionary")
     Set allQtrDates = CreateObject("Scripting.Dictionary")
@@ -187,11 +187,11 @@ End Sub
 ' Returns the next available row after this section.
 '
 ' Parameters:
-'   ws           — target worksheet
-'   concepts     — Collection of concept Dicts
-'   periodDates  — sorted array of end-date strings (column headers)
-'   isAnnual     — True → write annual data; False → quarterly
-'   startRow     — row to begin writing at
+'   ws            -  target worksheet
+'   concepts      -  Collection of concept Dicts
+'   periodDates   -  sorted array of end-date strings (column headers)
+'   isAnnual      -  True -> write annual data; False -> quarterly
+'   startRow      -  row to begin writing at
 '------------------------------------------------------------------------------
 Private Function WriteSection(ByVal ws As Worksheet, _
                                ByVal concepts As Collection, _
@@ -222,7 +222,7 @@ Private Function WriteSection(ByVal ws As Worksheet, _
     ws.Cells(r, COL_TAG).Font.Bold = True
     ws.Cells(r, COL_UNIT).Font.Bold = True
 
-    ' Date column headers — ISO end-date strings directly from JSON "end" field
+    ' Date column headers  -  ISO end-date strings directly from JSON "end" field
     Dim col As Long
     Dim i As Long
     For i = 0 To nDates - 1
@@ -239,7 +239,7 @@ Private Function WriteSection(ByVal ws As Worksheet, _
         Exit Function
     End If
 
-    ' Build a lookup: date → column index (0-based offset from COL_DATA_START)
+    ' Build a lookup: date -> column index (0-based offset from COL_DATA_START)
     Dim dateToCol As Object
     Set dateToCol = CreateObject("Scripting.Dictionary")
     For i = 0 To nDates - 1
@@ -248,13 +248,13 @@ Private Function WriteSection(ByVal ws As Worksheet, _
 
     Dim rec As Object
     For Each rec In concepts
-        ' Col A: XBRL tag — exact concept name, no renaming (PRD FR-13)
+        ' Col A: XBRL tag  -  exact concept name, no renaming (PRD FR-13)
         ws.Cells(r, COL_TAG).Value = rec("ConceptName")
 
         ' Col B: unit string (USD, USD/shares, shares, pure, etc.)
         ws.Cells(r, COL_UNIT).Value = rec("Units")
 
-        ' Col C+: values — ONLY write where data exists (empty = empty per FR-14)
+        ' Col C+: values  -  ONLY write where data exists (empty = empty per FR-14)
         Dim dataDict As Object
         If isAnnual Then
             Set dataDict = rec("AnnualData")
@@ -276,12 +276,12 @@ Private Function WriteSection(ByVal ws As Worksheet, _
                 Dim factObj As Object
                 Set factObj = dataDict(dateStr)
 
-                ' Extract val — MUST come from the "val" field (PRD FR-13)
+                ' Extract val  -  MUST come from the "val" field (PRD FR-13)
                 ' Use CDbl to handle values > Long max (AAPL reaches 416B) and EPS floats
                 Dim rawVal As Variant
                 rawVal = factObj("val")
 
-                ' Write as Double — covers integers up to 2^53 and all float EPS values
+                ' Write as Double  -  covers integers up to 2^53 and all float EPS values
                 ws.Cells(r, col).Value = CDbl(rawVal)
             End If
             ' If date not in column headers (shouldn't happen), skip silently
@@ -294,13 +294,13 @@ Private Function WriteSection(ByVal ws As Worksheet, _
 End Function
 
 '==============================================================================
-' SECTION 4 — Utility: Sort Dictionary Keys
+' SECTION 4  -  Utility: Sort Dictionary Keys
 '==============================================================================
 
 '------------------------------------------------------------------------------
 ' SortDictKeys
 ' Returns a String array of Scripting.Dictionary keys sorted ascending.
-' Uses bubble sort — key count is small (< 100 periods max).
+' Uses bubble sort  -  key count is small (< 100 periods max).
 ' Input dict keys must be sortable ISO date strings (YYYY-MM-DD).
 '------------------------------------------------------------------------------
 Private Function SortDictKeys(ByVal dict As Object) As String()
@@ -335,7 +335,7 @@ Private Function SortDictKeys(ByVal dict As Object) As String()
 End Function
 
 '==============================================================================
-' SECTION 5 — Spot-Check Audit Utility (Phase 4 / Phase 6 verification)
+' SECTION 5  -  Spot-Check Audit Utility (Phase 4 / Phase 6 verification)
 '==============================================================================
 
 '------------------------------------------------------------------------------
@@ -349,13 +349,13 @@ End Function
 '   Data rows:          conceptName | unit | val1 | val2 | ...
 '
 ' Parameters:
-'   wb          — workbook containing the output sheets
-'   sheetName   — WS_INCOME_STMT / WS_BALANCE_SHEET / WS_CASH_FLOW
-'   isAnnual    — True → search the ANNUAL section; False → QUARTERLY section
-'   conceptName — exact XBRL tag string (e.g. "NetIncomeLoss")
-'   periodEnd   — ISO end-date string (e.g. "2025-09-27")
-'   cellAddr    — OUTPUT: Excel cell address (e.g. "D5") or "" if not found
-'   cellVal     — OUTPUT: variant cell value or Empty if not found
+'   wb           -  workbook containing the output sheets
+'   sheetName    -  WS_INCOME_STMT / WS_BALANCE_SHEET / WS_CASH_FLOW
+'   isAnnual     -  True -> search the ANNUAL section; False -> QUARTERLY section
+'   conceptName  -  exact XBRL tag string (e.g. "NetIncomeLoss")
+'   periodEnd    -  ISO end-date string (e.g. "2025-09-27")
+'   cellAddr     -  OUTPUT: Excel cell address (e.g. "D5") or "" if not found
+'   cellVal      -  OUTPUT: variant cell value or Empty if not found
 '------------------------------------------------------------------------------
 Public Sub GetCellAuditInfo(ByVal wb As Workbook, _
                              ByVal sheetName As String, _

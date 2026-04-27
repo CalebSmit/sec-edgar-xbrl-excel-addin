@@ -1,31 +1,31 @@
 Attribute VB_Name = "modMain"
 '==============================================================================
-' modMain — Entry point and orchestration for SEC EDGAR XBRL Add-in
-' PRD §4.1, §4.2 | Phase 1 + Phase 2 + Phase 3 + Phase 4 + Phase 5
+' modMain  -  Entry point and orchestration for SEC EDGAR XBRL Add-in
+' PRD S4.1, S4.2 | Phase 1 + Phase 2 + Phase 3 + Phase 4 + Phase 5
 '==============================================================================
 Option Explicit
 
 '------------------------------------------------------------------------------
 ' PullSECFinancials
-' Main entry point — called by Ribbon button, Ctrl+Shift+S, or Alt+F8.
-' Full pipeline: Ticker → CIK → JSON fetch → Parse → Classify → Write sheets
+' Main entry point  -  called by Ribbon button, Ctrl+Shift+S, or Alt+F8.
+' Full pipeline: Ticker -> CIK -> JSON fetch -> Parse -> Classify -> Write sheets
 ' All progress via modProgress.ShowProgress (PRD FR-3)
-' All errors via modProgress.ShowError (PRD FR-4, §4.5)
+' All errors via modProgress.ShowError (PRD FR-4, S4.5)
 '------------------------------------------------------------------------------
 Public Sub PullSECFinancials()
     ClearProgress
 
-    ' --- FR-2: Prompt for ticker (PRD §4.1) ---------------------------------
+    ' --- FR-2: Prompt for ticker (PRD S4.1) ---------------------------------
     Dim ticker As String
     ticker = Trim(InputBox("Enter ticker symbol (e.g. AAPL):", _
-                           "SEC EDGAR — Pull Financials"))
+                           "SEC EDGAR  -  Pull Financials"))
 
     If Len(ticker) = 0 Then
         ClearProgress
-        Exit Sub   ' User cancelled — silent exit
+        Exit Sub   ' User cancelled  -  silent exit
     End If
 
-    ' --- Phase 1: Resolve ticker → CIK (E1/E3/E5) -------------------------
+    ' --- Phase 1: Resolve ticker -> CIK (E1/E3/E5) -------------------------
     ShowProgress PROG_RESOLVING
 
     Dim errCode As String, errMsg As String, companyName As String
@@ -100,7 +100,7 @@ Public Sub PullSECFinancials()
            "Balance Sheet: "   & bsN & " concepts" & vbCrLf & _
            "Cash Flow: "       & cfsN & " concepts" & vbCrLf & _
            "JSON size: "       & GetResponseSize(jsonText), _
-           vbInformation, "SEC EDGAR — Complete"
+           vbInformation, "SEC EDGAR  -  Complete"
 End Sub
 
 '==============================================================================
@@ -109,8 +109,8 @@ End Sub
 
 '------------------------------------------------------------------------------
 ' TestPhase1
-' Runs 3 cases: AAPL (→ CIK 0000320193), MSFT (→ CIK 0000789019),
-' FAKEXYZ (→ E1 error). Writes results to Phase1_Test sheet.
+' Runs 3 cases: AAPL (-> CIK 0000320193), MSFT (-> CIK 0000789019),
+' FAKEXYZ (-> E1 error). Writes results to Phase1_Test sheet.
 '------------------------------------------------------------------------------
 Public Sub TestPhase1()
     Dim ws As Worksheet
@@ -144,7 +144,7 @@ Public Sub TestPhase1()
         errCode = "" : errMsg = "" : compName = ""
         Dim gotCIK As String
 
-        Application.StatusBar = "Phase 1 test — ticker: " & tests(i, 1)
+        Application.StatusBar = "Phase 1 test  -  ticker: " & tests(i, 1)
         gotCIK = ResolveTicker(tests(i, 1), errCode, errMsg, compName)
 
         ws.Cells(i + 1, 1).Value = tests(i, 1)
@@ -169,7 +169,7 @@ Public Sub TestPhase1()
     ws.Activate
     Application.StatusBar = False
     MsgBox "Phase 1 tests complete. See 'Phase1_Test' sheet.", _
-           vbInformation, "SEC EDGAR Add-in — Phase 1 Test"
+           vbInformation, "SEC EDGAR Add-in  -  Phase 1 Test"
 End Sub
 
 '==============================================================================
@@ -183,40 +183,40 @@ End Sub
 ' Confirms: JSON fetched, parsed, us-gaap accessible, concept count > 200.
 '------------------------------------------------------------------------------
 Public Sub TestPhase2()
-    Application.StatusBar = "Phase 2 test — fetching AAPL data..."
+    Application.StatusBar = "Phase 2 test  -  fetching AAPL data..."
 
     Dim errCode As String, errMsg As String, compName As String
     errCode = "" : errMsg = "" : compName = ""
 
-    ' Step 1: Resolve AAPL → CIK
+    ' Step 1: Resolve AAPL -> CIK
     Dim cik10 As String
     cik10 = ResolveTicker("AAPL", errCode, errMsg, compName)
 
     If errCode <> "" Then
         Application.StatusBar = False
-        MsgBox "Phase 2 FAIL — Ticker resolution: " & errMsg, vbCritical, "Phase 2 Test"
+        MsgBox "Phase 2 FAIL  -  Ticker resolution: " & errMsg, vbCritical, "Phase 2 Test"
         Exit Sub
     End If
 
     ' Step 2: Fetch companyfacts JSON
-    Application.StatusBar = "Phase 2 test — downloading companyfacts JSON..."
+    Application.StatusBar = "Phase 2 test  -  downloading companyfacts JSON..."
     Dim jsonText As String
     jsonText = FetchCompanyFacts(cik10, errCode, errMsg)
 
     If errCode <> "" Then
         Application.StatusBar = False
-        MsgBox "Phase 2 FAIL — HTTP fetch: " & errMsg, vbCritical, "Phase 2 Test"
+        MsgBox "Phase 2 FAIL  -  HTTP fetch: " & errMsg, vbCritical, "Phase 2 Test"
         Exit Sub
     End If
 
     ' Step 3: Parse
-    Application.StatusBar = "Phase 2 test — parsing JSON..."
+    Application.StatusBar = "Phase 2 test  -  parsing JSON..."
     Dim parsed As Object
     Set parsed = ParseSECJson(jsonText)
 
     If parsed Is Nothing Then
         Application.StatusBar = False
-        MsgBox "Phase 2 FAIL — JSON parse returned Nothing", vbCritical, "Phase 2 Test"
+        MsgBox "Phase 2 FAIL  -  JSON parse returned Nothing", vbCritical, "Phase 2 Test"
         Exit Sub
     End If
 
@@ -226,7 +226,7 @@ Public Sub TestPhase2()
 
     If errCode <> "" Then
         Application.StatusBar = False
-        MsgBox "Phase 2 FAIL — us-gaap navigation: " & errMsg, vbCritical, "Phase 2 Test"
+        MsgBox "Phase 2 FAIL  -  us-gaap navigation: " & errMsg, vbCritical, "Phase 2 Test"
         Exit Sub
     End If
 
@@ -331,7 +331,7 @@ Public Sub TestPhase2()
     MsgBox "Phase 2 tests complete. See 'Phase2_Test' sheet." & vbCrLf & _
            "us-gaap concepts: " & conceptCount & vbCrLf & _
            "JSON size: " & Format(jsonLen / 1024 / 1024, "0.0") & " MB", _
-           vbInformation, "SEC EDGAR Add-in — Phase 2 Test"
+           vbInformation, "SEC EDGAR Add-in  -  Phase 2 Test"
 End Sub
 
 '==============================================================================
@@ -471,7 +471,7 @@ Public Sub TestPhase3()
             Dim fA As Object
             Set fA = annualDict(CStr(da))
             ws.Cells(dataRow, 1).Value = CStr(da)
-            ' Use CDbl not SafeLong — val can exceed Long max (e.g. AAPL=112B > 2.1B)
+            ' Use CDbl not SafeLong  -  val can exceed Long max (e.g. AAPL=112B > 2.1B)
             Dim rawValA As Variant
             On Error Resume Next
             rawValA = fA("val")
@@ -505,7 +505,7 @@ Public Sub TestPhase3()
             Dim qF As Object
             Set qF = qDict(qDates(qi))
             ws.Cells(dataRow, 1).Value = qDates(qi)
-            ' Use CDbl not SafeLong — val can exceed Long max
+            ' Use CDbl not SafeLong  -  val can exceed Long max
             Dim rawValQ As Variant
             On Error Resume Next
             rawValQ = qF("val")
@@ -602,7 +602,7 @@ Public Sub TestPhase4()
         wsCheck.Cells.Interior.ColorIndex = xlNone
     End If
 
-    wsCheck.Cells(1, 1).Value = "PHASE 4 SPOT-CHECKS — AAPL vs SEC JSON (byte-equality)"
+    wsCheck.Cells(1, 1).Value = "PHASE 4 SPOT-CHECKS  -  AAPL vs SEC JSON (byte-equality)"
     wsCheck.Cells(1, 1).Font.Bold = True
     wsCheck.Cells(2, 1).Value = "SC#"
     wsCheck.Cells(2, 2).Value = "Sheet"
@@ -624,7 +624,7 @@ Public Sub TestPhase4()
     Dim sc1Exp As String
     sc1Exp = HDR_ANNUAL
     WriteSpotCheck wsCheck, 3, 1, WS_INCOME_STMT, 1, 1, _
-        CStr(sc1Got), sc1Exp, "Static header — no JSON source", _
+        CStr(sc1Got), sc1Exp, "Static header  -  no JSON source", _
         (CStr(sc1Got) = sc1Exp)
 
     ' -- SC2: R2C3 = first annual end-date string ---------------------------
@@ -724,8 +724,8 @@ End Sub
 
 '------------------------------------------------------------------------------
 ' TestPhase5
-' Verifies all 5 error codes (PRD §4.5) display correct messages.
-' Does NOT actually trigger real network errors — instead calls GetErrorMessage
+' Verifies all 5 error codes (PRD S4.5) display correct messages.
+' Does NOT actually trigger real network errors  -  instead calls GetErrorMessage
 ' directly to verify the message strings are exactly per PRD spec.
 ' Also verifies the progress constants are set correctly.
 '
@@ -744,7 +744,7 @@ Public Sub TestPhase5()
         ws.Cells.Interior.ColorIndex = xlNone
     End If
 
-    ws.Cells(1, 1).Value = "PHASE 5 VERIFICATION — Error Handling (PRD §4.5)"
+    ws.Cells(1, 1).Value = "PHASE 5 VERIFICATION  -  Error Handling (PRD S4.5)"
     ws.Cells(1, 1).Font.Bold = True
 
     ' Header row
@@ -752,10 +752,10 @@ Public Sub TestPhase5()
     ws.Cells(2, 2).Value = "PRD Required Message"
     ws.Cells(2, 3).Value = "GetErrorMessage() Output"
     ws.Cells(2, 4).Value = "Match"
-    ws.Cells(2, 5).Value = "PRD §4.5 Condition"
+    ws.Cells(2, 5).Value = "PRD S4.5 Condition"
     ws.Rows(2).Font.Bold = True
 
-    ' PRD §4.5 exact required messages
+    ' PRD S4.5 exact required messages
     Dim prdMsg(1 To 5) As String
     Dim prdCodes(1 To 5) As String
     Dim prdContext(1 To 5) As String
@@ -875,7 +875,7 @@ End Sub
 '------------------------------------------------------------------------------
 Public Sub TestPhase6()
 
-    ' ── 100 spot-check records (10 tickers × 10 checks) ────────────────────
+    ' -- 100 spot-check records (10 tickers x 10 checks) --------------------
     ' Format: ticker, section, bucket, concept, period_end, expected_val
     ' Verified against live SEC JSON 2026-04-27 (qa_audit_fixed.json: 100/100)
     Const CHECKS_COUNT As Integer = 100
@@ -887,7 +887,7 @@ Public Sub TestPhase6()
     Dim chkPeriod(1 To 100)  As String  ' ISO end-date (YYYY-MM-DD)
     Dim chkExpVal(1 To 100)  As Double
 
-    ' ── AAPL (1-10) ──────────────────────────────────────────────────────────
+    ' -- AAPL (1-10) ----------------------------------------------------------
     chkTicker(1)="AAPL" : chkSection(1)="Annual"    : chkBucket(1)="IS"  : chkConcept(1)="NetIncomeLoss"                                                      : chkPeriod(1)="2025-09-27" : chkExpVal(1)=112010000000#
     chkTicker(2)="AAPL" : chkSection(2)="Annual"    : chkBucket(2)="IS"  : chkConcept(2)="Revenues"                                                           : chkPeriod(2)="2018-09-29" : chkExpVal(2)=265595000000#
     chkTicker(3)="AAPL" : chkSection(3)="Annual"    : chkBucket(3)="BS"  : chkConcept(3)="Goodwill"                                                           : chkPeriod(3)="2017-09-30" : chkExpVal(3)=5717000000#
@@ -899,7 +899,7 @@ Public Sub TestPhase6()
     chkTicker(9)="AAPL" : chkSection(9)="Annual"    : chkBucket(9)="BS"  : chkConcept(9)="AvailableForSaleDebtSecuritiesAccumulatedGrossUnrealizedGainBeforeTax"  : chkPeriod(9)="2020-09-26" : chkExpVal(9)=2784000000#
     chkTicker(10)="AAPL": chkSection(10)="Annual"   : chkBucket(10)="IS" : chkConcept(10)="AvailableForSaleSecuritiesDebtMaturitiesRollingAfterYearTenFairValue"  : chkPeriod(10)="2023-09-30": chkExpVal(10)=16153000000#
 
-    ' ── MSFT (11-20) ─────────────────────────────────────────────────────────
+    ' -- MSFT (11-20) ---------------------------------------------------------
     chkTicker(11)="MSFT" : chkSection(11)="Annual"    : chkBucket(11)="IS"  : chkConcept(11)="NetIncomeLoss"                                                              : chkPeriod(11)="2025-06-30" : chkExpVal(11)=101832000000#
     chkTicker(12)="MSFT" : chkSection(12)="Annual"    : chkBucket(12)="IS"  : chkConcept(12)="Revenues"                                                                   : chkPeriod(12)="2010-06-30" : chkExpVal(12)=62484000000#
     chkTicker(13)="MSFT" : chkSection(13)="Quarterly" : chkBucket(13)="IS"  : chkConcept(13)="NetIncomeLoss"                                                              : chkPeriod(13)="2025-12-31" : chkExpVal(13)=38458000000#
@@ -911,7 +911,7 @@ Public Sub TestPhase6()
     chkTicker(19)="MSFT" : chkSection(19)="Annual"    : chkBucket(19)="BS"  : chkConcept(19)="AdditionalPaidInCapitalCommonStock"                                         : chkPeriod(19)="2017-06-30" : chkExpVal(19)=68178000000#
     chkTicker(20)="MSFT" : chkSection(20)="Annual"    : chkBucket(20)="CFS" : chkConcept(20)="DepreciationAmortizationAndOther"                                           : chkPeriod(20)="2016-06-30" : chkExpVal(20)=3422000000#
 
-    ' ── GOOGL (21-30) ────────────────────────────────────────────────────────
+    ' -- GOOGL (21-30) --------------------------------------------------------
     chkTicker(21)="GOOGL" : chkSection(21)="Annual"    : chkBucket(21)="IS"  : chkConcept(21)="NetIncomeLoss"                                         : chkPeriod(21)="2024-12-31" : chkExpVal(21)=100118000000#
     chkTicker(22)="GOOGL" : chkSection(22)="Annual"    : chkBucket(22)="IS"  : chkConcept(22)="RevenueFromContractWithCustomerExcludingAssessedTax"  : chkPeriod(22)="2022-12-31" : chkExpVal(22)=279819000000#
     chkTicker(23)="GOOGL" : chkSection(23)="Annual"    : chkBucket(23)="BS"  : chkConcept(23)="Goodwill"                                              : chkPeriod(23)="2023-12-31" : chkExpVal(23)=29198000000#
@@ -923,7 +923,7 @@ Public Sub TestPhase6()
     chkTicker(29)="GOOGL" : chkSection(29)="Annual"    : chkBucket(29)="IS"  : chkConcept(29)="OperatingIncomeLoss"                                    : chkPeriod(29)="2023-12-31" : chkExpVal(29)=84293000000#
     chkTicker(30)="GOOGL" : chkSection(30)="Quarterly" : chkBucket(30)="CFS" : chkConcept(30)="PaymentsToAcquirePropertyPlantAndEquipment"            : chkPeriod(30)="2023-03-31" : chkExpVal(30)=6312000000#
 
-    ' ── AMZN (31-40) ─────────────────────────────────────────────────────────
+    ' -- AMZN (31-40) ---------------------------------------------------------
     chkTicker(31)="AMZN" : chkSection(31)="Annual"    : chkBucket(31)="IS"  : chkConcept(31)="NetIncomeLoss"                                 : chkPeriod(31)="2024-12-31" : chkExpVal(31)=59248000000#
     chkTicker(32)="AMZN" : chkSection(32)="Annual"    : chkBucket(32)="IS"  : chkConcept(32)="CostOfRevenue"                                 : chkPeriod(32)="2020-12-31" : chkExpVal(32)=233307000000#
     chkTicker(33)="AMZN" : chkSection(33)="Annual"    : chkBucket(33)="BS"  : chkConcept(33)="Goodwill"                                      : chkPeriod(33)="2022-12-31" : chkExpVal(33)=20288000000#
@@ -935,7 +935,7 @@ Public Sub TestPhase6()
     chkTicker(39)="AMZN" : chkSection(39)="Annual"    : chkBucket(39)="IS"  : chkConcept(39)="OperatingIncomeLoss"                            : chkPeriod(39)="2024-12-31" : chkExpVal(39)=68589000000#
     chkTicker(40)="AMZN" : chkSection(40)="Annual"    : chkBucket(40)="BS"  : chkConcept(40)="LongTermDebtNoncurrent"                         : chkPeriod(40)="2021-12-31" : chkExpVal(40)=48744000000#
 
-    ' ── NEM (41-50) ──────────────────────────────────────────────────────────
+    ' -- NEM (41-50) ----------------------------------------------------------
     chkTicker(41)="NEM" : chkSection(41)="Annual"    : chkBucket(41)="IS"  : chkConcept(41)="NetIncomeLoss"                                        : chkPeriod(41)="2024-12-31" : chkExpVal(41)=3360000000#
     chkTicker(42)="NEM" : chkSection(42)="Annual"    : chkBucket(42)="IS"  : chkConcept(42)="RevenueFromContractWithCustomerExcludingAssessedTax" : chkPeriod(42)="2023-12-31" : chkExpVal(42)=11813000000#
     chkTicker(43)="NEM" : chkSection(43)="Annual"    : chkBucket(43)="BS"  : chkConcept(43)="Goodwill"                                             : chkPeriod(43)="2023-12-31" : chkExpVal(43)=20168000000#
@@ -947,7 +947,7 @@ Public Sub TestPhase6()
     chkTicker(49)="NEM" : chkSection(49)="Annual"    : chkBucket(49)="BS"  : chkConcept(49)="CashAndCashEquivalentsAtCarryingValue"                 : chkPeriod(49)="2022-12-31" : chkExpVal(49)=3000000000#
     chkTicker(50)="NEM" : chkSection(50)="Annual"    : chkBucket(50)="CFS" : chkConcept(50)="PaymentsToAcquirePropertyPlantAndEquipment"           : chkPeriod(50)="2022-12-31" : chkExpVal(50)=1928000000#
 
-    ' ── JPM (51-60) ──────────────────────────────────────────────────────────
+    ' -- JPM (51-60) ----------------------------------------------------------
     chkTicker(51)="JPM" : chkSection(51)="Annual"    : chkBucket(51)="IS"  : chkConcept(51)="NetIncomeLoss"                                        : chkPeriod(51)="2024-12-31" : chkExpVal(51)=58471000000#
     chkTicker(52)="JPM" : chkSection(52)="Annual"    : chkBucket(52)="IS"  : chkConcept(52)="Revenues"                                             : chkPeriod(52)="2020-12-31" : chkExpVal(52)=120185000000#
     chkTicker(53)="JPM" : chkSection(53)="Annual"    : chkBucket(53)="BS"  : chkConcept(53)="Assets"                                               : chkPeriod(53)="2024-12-31" : chkExpVal(53)=4000544000000#
@@ -959,7 +959,7 @@ Public Sub TestPhase6()
     chkTicker(59)="JPM" : chkSection(59)="Annual"    : chkBucket(59)="IS"  : chkConcept(59)="OperatingIncomeLoss"                                  : chkPeriod(59)="2022-12-31" : chkExpVal(59)=37676000000#
     chkTicker(60)="JPM" : chkSection(60)="Annual"    : chkBucket(60)="IS"  : chkConcept(60)="IncomeTaxExpenseBenefit"                               : chkPeriod(60)="2024-12-31" : chkExpVal(60)=11963000000#
 
-    ' ── XOM (61-70) ──────────────────────────────────────────────────────────
+    ' -- XOM (61-70) ----------------------------------------------------------
     chkTicker(61)="XOM" : chkSection(61)="Annual"    : chkBucket(61)="IS"  : chkConcept(61)="NetIncomeLoss"                                               : chkPeriod(61)="2024-12-31" : chkExpVal(61)=33680000000#
     chkTicker(62)="XOM" : chkSection(62)="Annual"    : chkBucket(62)="IS"  : chkConcept(62)="RevenueFromContractWithCustomerExcludingAssessedTax"        : chkPeriod(62)="2022-12-31" : chkExpVal(62)=398674000000#
     chkTicker(63)="XOM" : chkSection(63)="Annual"    : chkBucket(63)="BS"  : chkConcept(63)="Assets"                                                      : chkPeriod(63)="2023-12-31" : chkExpVal(63)=376317000000#
@@ -971,7 +971,7 @@ Public Sub TestPhase6()
     chkTicker(69)="XOM" : chkSection(69)="Annual"    : chkBucket(69)="BS"  : chkConcept(69)="LongTermDebtNoncurrent"                                      : chkPeriod(69)="2024-12-31" : chkExpVal(69)=34631000000#
     chkTicker(70)="XOM" : chkSection(70)="Annual"    : chkBucket(70)="IS"  : chkConcept(70)="IncomeTaxExpenseBenefit"                                     : chkPeriod(70)="2022-12-31" : chkExpVal(70)=9614000000#
 
-    ' ── PFE (71-80) ──────────────────────────────────────────────────────────
+    ' -- PFE (71-80) ----------------------------------------------------------
     chkTicker(71)="PFE" : chkSection(71)="Annual"    : chkBucket(71)="IS"  : chkConcept(71)="NetIncomeLoss"                                               : chkPeriod(71)="2024-12-31" : chkExpVal(71)=8031000000#
     chkTicker(72)="PFE" : chkSection(72)="Annual"    : chkBucket(72)="IS"  : chkConcept(72)="RevenueFromContractWithCustomerExcludingAssessedTax"        : chkPeriod(72)="2022-12-31" : chkExpVal(72)=100330000000#
     chkTicker(73)="PFE" : chkSection(73)="Annual"    : chkBucket(73)="BS"  : chkConcept(73)="Goodwill"                                                    : chkPeriod(73)="2024-12-31" : chkExpVal(73)=67195000000#
@@ -983,7 +983,7 @@ Public Sub TestPhase6()
     chkTicker(79)="PFE" : chkSection(79)="Annual"    : chkBucket(79)="BS"  : chkConcept(79)="LongTermDebtNoncurrent"                                      : chkPeriod(79)="2024-12-31" : chkExpVal(79)=61538000000#
     chkTicker(80)="PFE" : chkSection(80)="Annual"    : chkBucket(80)="IS"  : chkConcept(80)="IncomeTaxExpenseBenefit"                                     : chkPeriod(80)="2023-12-31" : chkExpVal(80)=-2237000000#
 
-    ' ── TSLA (81-90) ─────────────────────────────────────────────────────────
+    ' -- TSLA (81-90) ---------------------------------------------------------
     chkTicker(81)="TSLA" : chkSection(81)="Annual"    : chkBucket(81)="IS"  : chkConcept(81)="NetIncomeLoss"                                               : chkPeriod(81)="2024-12-31" : chkExpVal(81)=7260000000#
     chkTicker(82)="TSLA" : chkSection(82)="Annual"    : chkBucket(82)="IS"  : chkConcept(82)="RevenueFromContractWithCustomerExcludingAssessedTax"        : chkPeriod(82)="2023-12-31" : chkExpVal(82)=96773000000#
     chkTicker(83)="TSLA" : chkSection(83)="Annual"    : chkBucket(83)="BS"  : chkConcept(83)="Goodwill"                                                    : chkPeriod(83)="2024-12-31" : chkExpVal(83)=216000000#
@@ -995,7 +995,7 @@ Public Sub TestPhase6()
     chkTicker(89)="TSLA" : chkSection(89)="Annual"    : chkBucket(89)="BS"  : chkConcept(89)="LongTermDebtNoncurrent"                                      : chkPeriod(89)="2024-12-31" : chkExpVal(89)=5269000000#
     chkTicker(90)="TSLA" : chkSection(90)="Annual"    : chkBucket(90)="IS"  : chkConcept(90)="IncomeTaxExpenseBenefit"                                     : chkPeriod(90)="2023-12-31" : chkExpVal(90)=5001000000#
 
-    ' ── BRK-B (91-100) ───────────────────────────────────────────────────────
+    ' -- BRK-B (91-100) -------------------------------------------------------
     chkTicker(91)="BRK-B" : chkSection(91)="Annual"    : chkBucket(91)="IS"  : chkConcept(91)="NetIncomeLoss"                                               : chkPeriod(91)="2024-12-31" : chkExpVal(91)=89052000000#
     chkTicker(92)="BRK-B" : chkSection(92)="Annual"    : chkBucket(92)="IS"  : chkConcept(92)="Revenues"                                                    : chkPeriod(92)="2020-12-31" : chkExpVal(92)=245510000000#
     chkTicker(93)="BRK-B" : chkSection(93)="Annual"    : chkBucket(93)="BS"  : chkConcept(93)="Assets"                                                      : chkPeriod(93)="2024-12-31" : chkExpVal(93)=1144207000000#
@@ -1007,7 +1007,7 @@ Public Sub TestPhase6()
     chkTicker(99)="BRK-B" : chkSection(99)="Annual"    : chkBucket(99)="BS"  : chkConcept(99)="LongTermDebtNoncurrent"                                      : chkPeriod(99)="2024-12-31" : chkExpVal(99)=58038000000#
     chkTicker(100)="BRK-B": chkSection(100)="Annual"   : chkBucket(100)="BS" : chkConcept(100)="CashAndCashEquivalentsAtCarryingValue"                       : chkPeriod(100)="2024-12-31": chkExpVal(100)=25008000000#
 
-    ' ── Set up Phase6_AuditTable sheet ──────────────────────────────────────
+    ' -- Set up Phase6_AuditTable sheet --------------------------------------
     Dim ws As Worksheet
     On Error Resume Next
     Set ws = ThisWorkbook.Worksheets("Phase6_AuditTable")
@@ -1021,7 +1021,7 @@ Public Sub TestPhase6()
     End If
 
     ' Title
-    ws.Cells(1, 1).Value = "PHASE 6 — 100-Cell QA Audit Table (10 tickers x 10 checks)"
+    ws.Cells(1, 1).Value = "PHASE 6  -  100-Cell QA Audit Table (10 tickers x 10 checks)"
     ws.Cells(1, 1).Font.Bold = True
     ws.Cells(2, 1).Value = "Verified against live SEC JSON 2026-04-27 | 100/100 PASS confirmed"
     ws.Cells(2, 1).Font.Italic = True
@@ -1059,7 +1059,7 @@ Public Sub TestPhase6()
         Dim isAnnual As Boolean
         isAnnual = (chkSection(i) = "Annual")
 
-        ' ── Look up the cell using GetCellAuditInfo ───────────────────────────
+        ' -- Look up the cell using GetCellAuditInfo ---------------------------
         ' GetCellAuditInfo (modExcelWriter) finds the row for a concept in a sheet
         ' section, and the column for a given period end-date.
         ' Returns the cell address and value, or empty string if not found.
@@ -1068,7 +1068,7 @@ Public Sub TestPhase6()
         GetCellAuditInfo ThisWorkbook, sheetName, isAnnual, _
                          chkConcept(i), chkPeriod(i), cellAddr, cellVal
 
-        ' ── Compare ──────────────────────────────────────────────────────────
+        ' -- Compare ----------------------------------------------------------
         Dim passed As Boolean
         If cellAddr = "" Or IsEmpty(cellVal) Then
             passed = False
@@ -1082,7 +1082,7 @@ Public Sub TestPhase6()
             totalFail = totalFail + 1
         End If
 
-        ' ── Write row ────────────────────────────────────────────────────────
+        ' -- Write row --------------------------------------------------------
         Dim dataRow As Long
         dataRow = 4 + i
 
@@ -1100,7 +1100,7 @@ Public Sub TestPhase6()
             IIf(passed, RGB(198, 239, 206), RGB(255, 199, 206))
     Next i
 
-    ' ── Summary row ──────────────────────────────────────────────────────────
+    ' -- Summary row ----------------------------------------------------------
     ws.Cells(106, 10).Value = totalPass & "/100 PASS"
     ws.Cells(106, 10).Font.Bold = True
     ws.Cells(106, 10).Interior.Color = _
@@ -1114,5 +1114,5 @@ Public Sub TestPhase6()
            "Result: " & totalPass & "/100 PASS  (" & totalFail & " FAIL)" & vbCrLf & _
            "See 'Phase6_AuditTable' sheet for details.", _
            IIf(totalPass = 100, vbInformation, vbExclamation), _
-           "SEC EDGAR Add-in — Phase 6 QA"
+           "SEC EDGAR Add-in  -  Phase 6 QA"
 End Sub

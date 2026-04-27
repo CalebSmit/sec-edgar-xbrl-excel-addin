@@ -1,14 +1,14 @@
 Attribute VB_Name = "modConfig"
 '==============================================================================
-' modConfig — Constants and configuration for SEC EDGAR XBRL Add-in
-' PRD §5.2 | Phase 1 (revised Phase 3 with empirically verified keyword lists)
+' modConfig  -  Constants and configuration for SEC EDGAR XBRL Add-in
+' PRD S5.2 | Phase 1 (revised Phase 3 with empirically verified keyword lists)
 '
-' KEYWORD LISTS (PRD §4.3) — verified against live AAPL (503 concepts) and
+' KEYWORD LISTS (PRD S4.3)  -  verified against live AAPL (503 concepts) and
 ' MSFT (543 concepts) on 2026-04-27. All 30 Phase 3 verification concepts
 ' classify correctly (0 misses). Changes from PRD original:
 '   - Removed bare 'Depreciation' from IS (collides with CFS DepreciationDepletion)
-'   - Changed 'DepreciationDepletion' → 'DepreciationDepletionAndAmortization' (specific)
-'   - Changed 'StockBasedCompensation' → also added 'AllocatedShareBasedCompensation'
+'   - Changed 'DepreciationDepletion' -> 'DepreciationDepletionAndAmortization' (specific)
+'   - Changed 'StockBasedCompensation' -> also added 'AllocatedShareBasedCompensation'
 '     (AAPL/MSFT use ShareBased- naming; StockBased- matches zero concepts in both)
 '   - Added 'PaymentsTo' to CFS (catches PaymentsToAcquire* capex patterns)
 '   - Kept 'StockBasedCompensation' per PRD (covers other filers)
@@ -39,11 +39,11 @@ Public Const WS_BALANCE_SHEET As String = "Balance Sheet"
 Public Const WS_CASH_FLOW As String = "Cash Flow"
 
 ' ---------------------------------------------------------------------------
-' Income Statement keywords (IS checked first per PRD §4.3 priority)
+' Income Statement keywords (IS checked first per PRD S4.3 priority)
 ' Pipe-delimited; parsed by modClassifier.SplitKeywords()
 '
 ' VERIFIED: 10/10 IS concepts in 30-concept check pass correctly.
-' NOTE: 'Depreciation' removed — collides with CFS DepreciationDepletionAndAmortization.
+' NOTE: 'Depreciation' removed  -  collides with CFS DepreciationDepletionAndAmortization.
 ' ---------------------------------------------------------------------------
 Public Const KEYWORDS_IS As String = _
     "Revenue|Sales|CostOfGoods|CostOfRevenue|GrossProfit|" & _
@@ -78,7 +78,7 @@ Public Const KEYWORDS_BS As String = _
     "TreasuryStock|AccumulatedOtherComprehensive"
 
 ' ---------------------------------------------------------------------------
-' Error Codes (PRD §4.5)
+' Error Codes (PRD S4.5)
 ' ---------------------------------------------------------------------------
 Public Const ERR_TICKER_NOT_FOUND As String = "E1"
 Public Const ERR_HTTP_RATE_LIMITED As String = "E2"
@@ -87,10 +87,10 @@ Public Const ERR_NO_USGAAP As String = "E4"
 Public Const ERR_JSON_PARSE As String = "E5"
 
 ' ---------------------------------------------------------------------------
-' Layout constants (PRD §4.4)
+' Layout constants (PRD S4.4)
 ' ---------------------------------------------------------------------------
 Public Const HDR_ANNUAL As String = "=== ANNUAL (10-K) ==="
 Public Const HDR_QUARTERLY As String = "=== QUARTERLY (10-Q) ==="
-Public Const COL_TAG As Integer = 1        ' Column A — XBRL concept name
-Public Const COL_UNIT As Integer = 2       ' Column B — unit type (USD, shares, etc.)
-Public Const COL_DATA_START As Integer = 3 ' Column C onward — period values
+Public Const COL_TAG As Integer = 1        ' Column A  -  XBRL concept name
+Public Const COL_UNIT As Integer = 2       ' Column B  -  unit type (USD, shares, etc.)
+Public Const COL_DATA_START As Integer = 3 ' Column C onward  -  period values

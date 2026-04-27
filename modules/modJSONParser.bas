@@ -1,9 +1,9 @@
 Attribute VB_Name = "modJSONParser"
 '==============================================================================
-' modJSONParser — JSON parsing and navigation for SEC companyfacts structure
-' PRD §5.1, §5.3 | Phase 2
+' modJSONParser  -  JSON parsing and navigation for SEC companyfacts structure
+' PRD S5.1, S5.3 | Phase 2
 '
-' Dependency: VBA-JSON (JsonConverter.bas) — MIT license
+' Dependency: VBA-JSON (JsonConverter.bas)  -  MIT license
 '   https://github.com/VBA-tools/VBA-JSON
 '   Bundled in dependencies/JsonConverter.bas (pre-baked into dist/SEC_XBRL_Addin.xlam).
 '
@@ -12,23 +12,23 @@ Attribute VB_Name = "modJSONParser"
 '     "cik": 320193,
 '     "entityName": "Apple Inc.",
 '     "facts": {
-'       "dei": { ... },          ← SKIP per PRD §4.3
+'       "dei": { ... },          <- SKIP per PRD S4.3
 '       "us-gaap": {
 '         "ConceptName": {
 '           "label": "...",
 '           "description": "...",
 '           "units": {
-'             "USD": [           ← or "USD/shares", "shares", "pure"
+'             "USD": [           <- or "USD/shares", "shares", "pure"
 '               {
-'                 "end":   "2024-09-28",   ← always present
-'                 "val":   93736000000,    ← always present (0 facts missing val verified)
+'                 "end":   "2024-09-28",   <- always present
+'                 "val":   93736000000,    <- always present (0 facts missing val verified)
 '                 "accn":  "0000320193-...",
 '                 "fy":    2025,
-'                 "fp":    "FY",           ← "FY","Q1","Q2","Q3"
-'                 "form":  "10-K",         ← "10-K","10-Q","10-K/A","8-K"
+'                 "fp":    "FY",           <- "FY","Q1","Q2","Q3"
+'                 "form":  "10-K",         <- "10-K","10-Q","10-K/A","8-K"
 '                 "filed": "2025-10-31",
-'                 "start": "2024-09-29",   ← OPTIONAL: absent for instant (BS) facts
-'                 "frame": "..."           ← OPTIONAL
+'                 "start": "2024-09-29",   <- OPTIONAL: absent for instant (BS) facts
+'                 "frame": "..."           <- OPTIONAL
 '               }
 '             ]
 '           }
@@ -38,16 +38,16 @@ Attribute VB_Name = "modJSONParser"
 '   }
 '
 ' Key filtering rules (empirically verified):
-'   ANNUAL:    form="10-K" AND fp="FY" AND (no start → instant) OR (duration >= 300 days)
+'   ANNUAL:    form="10-K" AND fp="FY" AND (no start -> instant) OR (duration >= 300 days)
 '   QUARTERLY: form="10-Q" AND fp IN ("Q1","Q2","Q3") AND duration 60-110 days (duration facts)
 '              OR form="10-Q" AND no start (instant BS facts)
 '   DEDUP:     group by end_date, keep latest filed date
-'   8-K facts: excluded (1,118 found in AAPL — not from 10-K/10-Q filings)
+'   8-K facts: excluded (1,118 found in AAPL  -  not from 10-K/10-Q filings)
 '==============================================================================
 Option Explicit
 
 '==============================================================================
-' SECTION 1 — Core JSON Parsing
+' SECTION 1  -  Core JSON Parsing
 '==============================================================================
 
 '------------------------------------------------------------------------------
@@ -103,16 +103,16 @@ Public Function SafeLong(ByVal dict As Object, ByVal key As String) As Long
 End Function
 
 '==============================================================================
-' SECTION 2 — Companyfacts Navigation
+' SECTION 2  -  Companyfacts Navigation
 '==============================================================================
 
 '------------------------------------------------------------------------------
 ' GetUSGAAP
-' Navigates facts → us-gaap and returns the us-gaap Dictionary.
+' Navigates facts -> us-gaap and returns the us-gaap Dictionary.
 ' Returns Nothing and sets errCode=ERR_NO_USGAAP if absent.
 '
 ' VERIFIED path: parsed("facts")("us-gaap")
-' Note: "us-gaap" key contains a hyphen — VBA-JSON handles this correctly
+' Note: "us-gaap" key contains a hyphen  -  VBA-JSON handles this correctly
 ' as a string key in Scripting.Dictionary.
 '------------------------------------------------------------------------------
 Public Function GetUSGAAP(ByVal parsed As Object, _
@@ -128,7 +128,7 @@ Public Function GetUSGAAP(ByVal parsed As Object, _
         Exit Function
     End If
 
-    ' Navigate: root → "facts"
+    ' Navigate: root -> "facts"
     Dim facts As Object
     Set facts = GetDictKey(parsed, "facts")
     If facts Is Nothing Then
@@ -137,7 +137,7 @@ Public Function GetUSGAAP(ByVal parsed As Object, _
         Exit Function
     End If
 
-    ' Navigate: "facts" → "us-gaap"
+    ' Navigate: "facts" -> "us-gaap"
     Dim usGaap As Object
     Set usGaap = GetDictKey(facts, "us-gaap")
     If usGaap Is Nothing Then
@@ -157,7 +157,7 @@ Public Function GetUSGAAP(ByVal parsed As Object, _
 End Function
 
 '==============================================================================
-' SECTION 3 — Fact Filtering and Deduplication
+' SECTION 3  -  Fact Filtering and Deduplication
 '==============================================================================
 ' These functions operate on VBA-JSON Collections (arrays of fact objects).
 ' Each fact object is a Scripting.Dictionary with keys verified above.
@@ -169,8 +169,8 @@ End Function
 ' Rule (empirically verified):
 '   form = "10-K" AND fp = "FY"
 '   AND either:
-'     (a) no "start" key (instant/point-in-time — for BS concepts)
-'     (b) duration (end - start) >= 300 days (full-year — for IS/CFS concepts)
+'     (a) no "start" key (instant/point-in-time  -  for BS concepts)
+'     (b) duration (end - start) >= 300 days (full-year  -  for IS/CFS concepts)
 '
 ' This correctly excludes the ~90-day sub-period facts that AAPL's 10-K
 ' also files under fp="FY" (restated quarterly breakdowns within the annual).
@@ -185,10 +185,10 @@ Public Function IsAnnualFact(ByVal fact As Object) As Boolean
 
     ' Check for instant vs duration
     If Not fact.Exists("start") Then
-        ' Instant fact (no start date) — valid for BS annual
+        ' Instant fact (no start date)  -  valid for BS annual
         IsAnnualFact = True
     Else
-        ' Duration fact — require >= 300 days for full-year
+        ' Duration fact  -  require >= 300 days for full-year
         Dim dur As Long
         dur = DateDiff("d", CDate(SafeString(fact, "start")), _
                            CDate(SafeString(fact, "end")))
@@ -203,11 +203,11 @@ End Function
 ' Rule (empirically verified):
 '   form = "10-Q" AND fp IN ("Q1","Q2","Q3")
 '   AND either:
-'     (a) no "start" key (instant — BS quarterly snapshot)
+'     (a) no "start" key (instant  -  BS quarterly snapshot)
 '     (b) duration 60-110 days (single-quarter duration fact for IS/CFS)
 '
 ' Note: Q4 is NOT reported in 10-Q; it derives from 10-K only.
-' We do NOT synthesize Q4. Per PRD §4.6 FR-14: no estimation.
+' We do NOT synthesize Q4. Per PRD S4.6 FR-14: no estimation.
 '------------------------------------------------------------------------------
 Public Function IsQuarterlyFact(ByVal fact As Object) As Boolean
     IsQuarterlyFact = False
@@ -220,7 +220,7 @@ Public Function IsQuarterlyFact(ByVal fact As Object) As Boolean
     If fp <> "Q1" And fp <> "Q2" And fp <> "Q3" Then Exit Function
 
     If Not fact.Exists("start") Then
-        ' Instant fact — valid for BS quarterly
+        ' Instant fact  -  valid for BS quarterly
         IsQuarterlyFact = True
     Else
         Dim dur As Long
@@ -237,13 +237,13 @@ End Function
 ' keyed by end_date, holding the single best fact per period.
 '
 ' Dedup rule: keep the fact with the latest "filed" date per end_date.
-' This picks the most recent restated/amended value — same strategy the
+' This picks the most recent restated/amended value  -  same strategy the
 ' SEC EDGAR viewer itself uses.
 '
-' Returns: Scripting.Dictionary{ end_date_string → fact_Dictionary }
+' Returns: Scripting.Dictionary{ end_date_string -> fact_Dictionary }
 '------------------------------------------------------------------------------
 Public Function DeduplicateFacts(ByVal factsCol As Collection) As Object
-    ' result: end_date (String) → best fact (Dictionary)
+    ' result: end_date (String) -> best fact (Dictionary)
     Dim result As Object
     Set result = CreateObject("Scripting.Dictionary")
 
@@ -284,10 +284,10 @@ End Function
 ' filters by annual or quarterly rule, then deduplicates.
 '
 ' Parameters:
-'   unitsArray  — VBA-JSON Collection of fact Dicts
-'   isAnnual    — True → filter with IsAnnualFact; False → IsQuarterlyFact
+'   unitsArray   -  VBA-JSON Collection of fact Dicts
+'   isAnnual     -  True -> filter with IsAnnualFact; False -> IsQuarterlyFact
 '
-' Returns: Scripting.Dictionary{ end_date → fact }
+' Returns: Scripting.Dictionary{ end_date -> fact }
 '------------------------------------------------------------------------------
 Public Function FilterAndDedup(ByVal unitsArray As Object, _
                                ByVal isAnnualSection As Boolean) As Object
@@ -311,7 +311,7 @@ End Function
 ' GetSortedEndDates
 ' Returns a sorted array of end_date strings from a Scripting.Dictionary
 ' (as produced by DeduplicateFacts / FilterAndDedup).
-' Sorted ascending (oldest → newest) per PRD §4.4 "columns sorted ascending."
+' Sorted ascending (oldest -> newest) per PRD S4.4 "columns sorted ascending."
 '------------------------------------------------------------------------------
 Public Function GetSortedEndDates(ByVal dedupDict As Object) As String()
     Dim n As Long
@@ -328,7 +328,7 @@ Public Function GetSortedEndDates(ByVal dedupDict As Object) As String()
         i = i + 1
     Next k
 
-    ' Bubble sort ascending (n is small — typically < 30 periods)
+    ' Bubble sort ascending (n is small  -  typically < 30 periods)
     Dim j As Long
     Dim tmp As String
     For i = 0 To n - 2
@@ -345,7 +345,7 @@ Public Function GetSortedEndDates(ByVal dedupDict As Object) As String()
 End Function
 
 '==============================================================================
-' SECTION 4 — Verification Utility (Phase 2 testing)
+' SECTION 4  -  Verification Utility (Phase 2 testing)
 '==============================================================================
 
 '------------------------------------------------------------------------------

@@ -1,14 +1,14 @@
 Attribute VB_Name = "modProgress"
 '==============================================================================
-' modProgress — Status bar progress messages and user-facing feedback
-' PRD §4.1 FR-3, FR-4 | Phase 5
+' modProgress  -  Status bar progress messages and user-facing feedback
+' PRD S4.1 FR-3, FR-4 | Phase 5
 '
 ' All status bar messages are centralised here so they are consistent and
-' easy to update. No MsgBox calls in this module — those live in modMain.
+' easy to update. No MsgBox calls in this module  -  those live in modMain.
 '==============================================================================
 Option Explicit
 
-' Progress step identifiers — passed to ShowProgress
+' Progress step identifiers  -  passed to ShowProgress
 Public Const PROG_RESOLVING As String = "Resolving ticker..."
 Public Const PROG_FETCHING As String = "Fetching SEC data..."
 Public Const PROG_PARSING As String = "Parsing JSON..."
@@ -37,7 +37,7 @@ End Sub
 
 '==============================================================================
 ' Error Message Functions
-' Returns the correct user-facing message for each PRD §4.5 error code.
+' Returns the correct user-facing message for each PRD S4.5 error code.
 ' Centralised here so Phase 5 test can verify exact strings.
 '==============================================================================
 
@@ -92,5 +92,5 @@ Public Sub ShowError(ByVal errCode As String, Optional ByVal context As String =
     Dim msgTitle As String, msgBody As String
     GetErrorMessage errCode, context, msgTitle, msgBody
 
-    MsgBox msgBody, vbExclamation, "SEC EDGAR Add-in — " & msgTitle
+    MsgBox msgBody, vbExclamation, "SEC EDGAR Add-in  -  " & msgTitle
 End Sub
