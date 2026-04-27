@@ -1,0 +1,113 @@
+SEC EDGAR XBRL Financial Statements — Excel Add-in
+Version 1.0.0
+====================================================
+
+WHAT THIS DOES
+--------------
+Enter a stock ticker (like AAPL, MSFT, TSLA) and this add-in fetches
+real financial statement data directly from the SEC EDGAR database and
+fills in three worksheets:
+
+  • Income Statement  (annual + quarterly)
+  • Balance Sheet     (annual + quarterly)
+  • Cash Flow         (annual + quarterly)
+
+No subscriptions. No sign-up. No internet account needed.
+Data comes straight from SEC EDGAR — the official US government filing database.
+
+REQUIREMENTS
+------------
+  • Windows PC (Windows 10 or 11)
+  • Microsoft Excel 2016 or newer (Microsoft 365 also works)
+  • Internet connection (to fetch SEC data)
+
+INSTALL — 4 STEPS
+-----------------
+
+STEP 1: Save the add-in file
+  Copy "SEC_XBRL_Addin.xlam" to a folder on your computer.
+  Suggested: C:\Users\YourName\Documents\ExcelAddins\
+
+STEP 2: Install it in Excel
+  1. Open Excel (any workbook, or a blank one)
+  2. Click the FILE tab (top-left)
+  3. Click Options (near the bottom of the left menu)
+  4. In the Excel Options window, click Add-ins (left sidebar)
+  5. At the bottom, next to "Manage:", make sure it says "Excel Add-ins"
+  6. Click the Go... button
+  7. In the Add-Ins window, click Browse...
+  8. Navigate to the folder where you saved SEC_XBRL_Addin.xlam
+  9. Select SEC_XBRL_Addin.xlam and click OK
+  10. You should now see "SEC_XBRL_Addin" in the list with a checkmark
+  11. Click OK
+
+STEP 3: Enable macros (if prompted)
+  When you first open the add-in, Excel may show a security bar saying
+  "Macros have been disabled." Click "Enable Content" or "Enable Macros."
+  This is required for the add-in to work.
+
+  If Excel blocks it entirely:
+  1. Go to File > Options > Trust Center > Trust Center Settings
+  2. Click Macro Settings
+  3. Select "Disable all macros with notification"
+  4. Click OK, then re-open the add-in
+
+STEP 4: Use it!
+  Once installed, you have two ways to pull data:
+
+  OPTION A — Keyboard shortcut (fastest):
+    Press Ctrl + Shift + S
+    Type a ticker (e.g. AAPL) and press Enter
+
+  OPTION B — Macro:
+    Press Alt + F8
+    Select "PullSECFinancials"
+    Click Run
+    Type a ticker and press Enter
+
+  OPTION C — Add-ins ribbon tab:
+    Click the "Add-ins" tab in the Excel ribbon
+    Click "Pull SEC Financials"
+    Type a ticker and press Enter
+
+  Note: The ribbon button (Option C) requires an extra setup step using
+  the Office RibbonX Editor. Options A and B work without it.
+
+UNINSTALL
+---------
+  1. Go to File > Options > Add-ins
+  2. Click Go... next to "Excel Add-ins"
+  3. Uncheck "SEC_XBRL_Addin" and click OK
+
+TROUBLESHOOTING
+---------------
+  "Ticker not found"
+    → Check spelling. Use the official ticker (e.g. BRK-B not BRKB).
+    → The add-in uses the same tickers as SEC EDGAR.
+
+  "Cannot connect to SEC servers"
+    → Check your internet connection.
+    → SEC EDGAR may be temporarily down. Try again in a few minutes.
+
+  "No US-GAAP XBRL data found"
+    → This company does not file US-GAAP XBRL with the SEC.
+    → Usually means non-US companies or very small filers.
+
+  Nothing happens when I press Ctrl+Shift+S
+    → The add-in may not be installed. Repeat Step 2 above.
+    → Make sure macros are enabled (Step 3 above).
+
+DATA NOTES
+----------
+  • Data comes directly from SEC EDGAR with no modifications.
+  • Annual data = 10-K filings. Quarterly = 10-Q filings (Q1, Q2, Q3 only).
+  • Q4 does not appear in the quarterly section (it is not filed separately).
+  • XBRL concept names are shown as filed (e.g. "RevenueFromContractWithCustomer...").
+  • Large companies (Apple, JPMorgan) may take 15–30 seconds — this is normal.
+
+SOURCE & LICENSE
+----------------
+  Source code: https://github.com/CalebSmit/sec-edgar-xbrl-excel-addin
+  License: MIT
+  VBA-JSON library (bundled): MIT license, by Tim Hall
+    https://github.com/VBA-tools/VBA-JSON

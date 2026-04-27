@@ -1,219 +1,196 @@
 # SEC EDGAR XBRL Financial Statements — Excel Add-in
 
-**Version:** 1.0.0 (Phase 6 — Release)  
-**Platform:** Excel for Windows (VBA .xlam)  
-**Cost:** $0 — no subscriptions, no hosting, no backend  
-**Data Source:** SEC EDGAR public API (no auth required)  
-**QA:** 100/100 spot-checks verified against live SEC JSON (2026-04-27)
+**Version:** 1.0.0 | **Platform:** Excel for Windows | **Cost:** Free
+
+Pull live financial statement data from the SEC EDGAR database directly into Excel.
+No sign-up, no subscriptions, no backend — data comes straight from the SEC.
 
 ---
 
-## What It Does
+## Download & Install
 
-Enter a ticker symbol (e.g. `AAPL`) → the add-in fetches XBRL financial statement data directly from the SEC EDGAR API and populates three worksheets:
+### Step 1 — Download the add-in
 
-| Sheet | Contents |
-|-------|----------|
-| Income Statement | Revenue, gross profit, net income, EPS, R&D, SG&A, etc. |
-| Balance Sheet | Assets, liabilities, equity, cash, goodwill, debt, etc. |
-| Cash Flow | Operating/investing/financing cash flows, capex, D&A, etc. |
+**[⬇ Download SEC_XBRL_Addin.xlam](dist/SEC_XBRL_Addin.xlam)**
 
-Each sheet shows both **annual (10-K)** and **quarterly (10-Q)** data, exactly as reported in SEC filings — no renaming, no estimation, no LLM inference. Each cell value traces 1:1 to the `val` field in the raw SEC JSON.
+> Save `SEC_XBRL_Addin.xlam` to a folder on your computer (e.g. `Documents\ExcelAddins\`).
 
 ---
 
-## Installation
+### Step 2 — Install in Excel
 
-### Step 1 — Get the Code
+1. Open Excel
+2. Click **File → Options**
+3. Click **Add-ins** in the left sidebar
+4. At the bottom, make sure **"Excel Add-ins"** is selected → click **Go...**
+5. Click **Browse...**
+6. Navigate to where you saved `SEC_XBRL_Addin.xlam` → select it → click **OK**
+7. Make sure **SEC_XBRL_Addin** is checked → click **OK**
 
-Clone or download this repository. Everything you need is included:
+---
+
+### Step 3 — Enable macros (if prompted)
+
+If Excel shows a yellow bar saying "Macros have been disabled" → click **Enable Content**.
+
+If Excel blocks macros entirely:
+1. **File → Options → Trust Center → Trust Center Settings**
+2. Click **Macro Settings**
+3. Select **"Disable all macros with notification"** → OK
+
+---
+
+### Step 4 — Use it
+
+| Method | How |
+|--------|-----|
+| **Keyboard** | Press `Ctrl + Shift + S` → type a ticker → Enter |
+| **Macro** | `Alt + F8` → select `PullSECFinancials` → Run → type a ticker |
+| **Ribbon button** | Click **Pull SEC Financials** in the **Add-ins** tab |
+
+Enter any US stock ticker: `AAPL`, `MSFT`, `TSLA`, `JPM`, `GOOGL`, `BRK-B`, etc.
+
+The add-in fetches data from SEC EDGAR and fills three worksheets:
+- **Income Statement** — Revenue, gross profit, net income, EPS, R&D, SG&A
+- **Balance Sheet** — Assets, liabilities, equity, cash, goodwill, debt
+- **Cash Flow** — Operating/investing/financing flows, capex, D&A
+
+Both **annual (10-K)** and **quarterly (10-Q)** data appear side by side.
+
+---
+
+## Requirements
+
+- Windows 10 or 11
+- Microsoft Excel 2016 or newer (Microsoft 365 works too)
+- Internet connection (to fetch SEC data)
+
+> **Mac not supported.** The add-in uses Windows-only COM objects.
+
+---
+
+## What the data looks like
+
+Each cell traces 1:1 to the `val` field in the raw SEC EDGAR JSON — no estimates, no rounding, no LLM inference. Column headers are ISO end-dates (e.g. `2024-09-28`). Row labels are the XBRL concept names as filed.
+
+Large companies like Apple (~15 MB) or JPMorgan (~25 MB) may take 15–30 seconds to load. This is normal — the SEC serves the full filing history in one file.
+
+---
+
+## Error Messages
+
+| Message | What it means |
+|---------|---------------|
+| `Ticker 'XYZ' not found in SEC database.` | Check spelling. Use the SEC ticker (e.g. `BRK-B` not `BRKB`). |
+| `SEC rate-limited. Please wait 30 seconds and try again.` | Too many requests. Wait and retry. |
+| `Cannot connect to SEC servers. Check your internet connection.` | No internet, or SEC is temporarily down. |
+| `No US-GAAP XBRL data found for this company.` | Company doesn't file US-GAAP XBRL (e.g. foreign filers). |
+| `Failed to parse SEC response. The data format may have changed.` | SEC changed their API format. Check GitHub for an update. |
+
+---
+
+## Known Limitations
+
+| Limitation | Detail |
+|------------|--------|
+| **Windows only** | Mac Excel not supported in v1. |
+| **Q4 not in quarterly** | Q4 is not filed in 10-Q. It appears only in the Annual section. |
+| **10-K/A excluded** | Amended filings are excluded; original 10-K values are shown. |
+| **XBRL tag names** | Row labels are raw XBRL names, not human-friendly labels. |
+| **One unit per concept** | Prefers USD > USD/shares > shares > pure. |
+| **No IFRS** | US-GAAP only. Foreign IFRS filers will show E4. |
+
+---
+
+## Uninstall
+
+**File → Options → Add-ins → Go...** → uncheck **SEC_XBRL_Addin** → OK.
+
+---
+---
+
+## For Developers — Build from Source
+
+> Normal users do not need this section. Install the `.xlam` from the `dist/` folder above.
+
+### Repository Structure
 
 ```
 sec-edgar-xbrl-excel-addin/
-├── modules/          ← All 9 VBA modules (import these into Excel)
-├── dependencies/     ← JsonConverter.bas (VBA-JSON v2.3.1, MIT license)
-├── customUI/         ← Ribbon XML for the Add-ins tab button
+├── dist/
+│   ├── SEC_XBRL_Addin.xlam   ← Prebuilt add-in (download this)
+│   └── INSTALL.txt            ← Beginner install guide
+├── modules/                   ← VBA source (10 .bas / .cls files)
+├── dependencies/
+│   ├── JsonConverter.bas      ← VBA-JSON v2.3.1 (MIT license, bundled)
+│   └── LICENSE-VBA-JSON.txt
+├── customUI/
+│   └── customUI14.xml         ← Ribbon XML (Office 2010+)
 └── README.md
 ```
 
-No external downloads needed. `JsonConverter.bas` is included in the `dependencies/` folder.
+### Building the .xlam from Source
 
-### Step 2 — Import Modules into Excel
+If you want to build the add-in yourself from VBA source:
 
-1. Open Excel
-2. Press `Alt + F11` to open the VBA editor
-3. **File → Import File** → import `dependencies/JsonConverter.bas`
-4. **File → Import File** → import each `.bas` / `.cls` file from the `modules/` folder:
-   - `modConfig.bas`
-   - `modHTTP.bas`
-   - `modTickerLookup.bas`
-   - `modJSONParser.bas`
-   - `modClassifier.bas`
-   - `modExcelWriter.bas`
-   - `modProgress.bas`
-   - `modRibbon.bas`
-   - `modMain.bas`
-   - `ThisWorkbook.cls` ← import into the **ThisWorkbook** module (do not create a new module)
+1. Open Excel and press `Alt + F11` to open the VBA editor
+2. **File → Import File** → import `dependencies/JsonConverter.bas`
+3. **File → Import File** → import all 9 files from `modules/`:
+   - `modConfig.bas`, `modHTTP.bas`, `modTickerLookup.bas`
+   - `modJSONParser.bas`, `modClassifier.bas`, `modExcelWriter.bas`
+   - `modProgress.bas`, `modRibbon.bas`, `modMain.bas`
+4. Import `modules/ThisWorkbook.cls` into the **existing ThisWorkbook** module (do not create a new one)
+5. **Tools → References** → check:
+   - ✅ Microsoft Scripting Runtime
+   - ✅ Microsoft XML, v6.0
+6. *(Optional)* Use [Office RibbonX Editor](https://github.com/fernandreu/office-ribbonx-editor) to inject `customUI/customUI14.xml` for the ribbon button
+7. **File → Save As** → type: **Excel Add-in (.xlam)** → save as `SEC_XBRL_Addin.xlam`
 
-### Step 3 — Install the Custom Ribbon
-
-1. Close the VBA editor
-2. Copy `customUI/customUI14.xml` into the `.xlam` package:
-   - Save the file as `.xlam` first (Step 4)
-   - Use a tool like [Office RibbonX Editor](https://github.com/fernandreu/office-ribbonx-editor) to inject `customUI14.xml`
-   - The ribbon adds a **"Pull SEC Financials"** button to the **Add-ins** tab
-
-### Step 4 — Required VBA References
-
-In the VBA editor, go to **Tools → References** and ensure these are checked:
-- ✅ Microsoft Scripting Runtime (`scrrun.dll`) — required for `Scripting.Dictionary`
-- ✅ Microsoft XML, v6.0 — required for HTTP (usually already checked)
-
-### Step 5 — Save as .xlam
-
-1. In Excel: **File → Save As**
-2. Choose file type: **Excel Add-in (.xlam)**
-3. Save as `SEC_XBRL_Addin.xlam`
-
-### Step 6 — Install Add-in
-
-1. **File → Options → Add-ins → Manage: Excel Add-ins → Go**
-2. Click **Browse** → select `SEC_XBRL_Addin.xlam`
-3. Check the box next to it → OK
-
----
-
-## Usage
-
-### Option A — Ribbon Button
-Click **"Pull SEC Financials"** in the **Add-ins** tab.
-
-### Option B — Keyboard Shortcut
-Press `Ctrl + Shift + S`
-
-### Option C — Macro
-1. Press `Alt + F8`
-2. Select `PullSECFinancials` → Run
-3. Enter a ticker (e.g. `AAPL`, `MSFT`, `GOOGL`)
-
-### Workflow
-1. Enter a ticker → add-in resolves it to a CIK via `company_tickers.json`
-2. Fetches the full `companyfacts` JSON from SEC EDGAR
-3. Classifies all US-GAAP XBRL concepts into IS / BS / CFS buckets
-4. Writes annual and quarterly data to three worksheets in a sparse-matrix layout
-
----
-
-## Architecture
+### Architecture
 
 ```
 SEC_XBRL_Addin.xlam
-├── modConfig        — Constants, API endpoints, keyword lists, error codes, sheet names
-├── modHTTP          — WinHttp GET with User-Agent header, rate-limit delay, gzip, retries
-├── modTickerLookup  — Ticker → 10-digit CIK resolution via SEC company_tickers.json
-├── modJSONParser    — JSON navigation, IsAnnualFact, IsQuarterlyFact,
-│                      DeduplicateFacts, FilterAndDedup, GetSortedEndDates
-├── modClassifier    — Keyword-based concept → IS/BS/CFS bucketing,
-│                      unit preference (USD > USD/shares > shares > pure)
-├── modExcelWriter   — Worksheet creation, sparse-matrix layout, CDbl() cell writes,
-│                      GetCellAuditInfo for TestPhase6
-├── modProgress      — ShowProgress, ClearProgress, ShowError, GetErrorMessage;
-│                      all PROG_* and ERR_* constants (PRD §4.5)
+├── modConfig        — Constants, API endpoints, keyword lists, error codes
+├── modHTTP          — WinHttp GET, User-Agent header, rate-limit, retries
+├── modTickerLookup  — Ticker → 10-digit CIK via SEC company_tickers.json
+├── modJSONParser    — JSON navigation, annual/quarterly filters, dedup
+├── modClassifier    — Keyword-based XBRL concept → IS/BS/CFS bucketing
+├── modExcelWriter   — Worksheet creation, sparse-matrix layout, CDbl() writes
+├── modProgress      — Progress bar, error dialogs, PROG_* / ERR_* constants
 ├── modRibbon        — RibbonCallback_PullSECFinancials, Ctrl+Shift+S shortcut
-├── modMain          — PullSECFinancials (full pipeline),
-│                      TestPhase1..TestPhase6 verification macros
-└── ThisWorkbook.cls — Workbook_Open (register shortcut), Workbook_BeforeClose (cleanup)
-
-customUI/
-└── customUI14.xml   — Office 2010+ Ribbon XML (Add-ins tab button)
+├── modMain          — PullSECFinancials pipeline + TestPhase1–6 macros
+└── ThisWorkbook.cls — Workbook_Open / BeforeClose event handlers
 ```
 
----
-
-## Data Integrity
-
-- **Zero LLM calls** — entirely deterministic VBA + SEC API
-- **Every cell** traces 1:1 to a `val` field in the raw SEC JSON — no estimation
-- **No interpolation** — missing data = empty cell (PRD FR-14)
-- **Annual filter:** `form=10-K`, `fp=FY`, duration ≥ 300 days (or instant/BS fact)
-- **Quarterly filter:** `form=10-Q`, `fp ∈ {Q1,Q2,Q3}`, 60–110 day duration (or instant/BS fact)
-- **Dedup:** Latest `filed` date wins per `end_date` — handles restatements
-- **Numeric type:** `CDbl()` for all cell writes — handles values up to 4 trillion (JPM assets)
-- **Audit:** 100/100 spot-checks passed across 10 tickers × 10 checks (2026-04-27)
-
----
-
-## SEC API Endpoints Used
+### SEC API Endpoints
 
 | Endpoint | URL |
 |----------|-----|
 | Ticker → CIK | `https://www.sec.gov/files/company_tickers.json` |
 | Company Facts | `https://data.sec.gov/api/xbrl/companyfacts/CIK{10-digit}.json` |
 
-All requests include `User-Agent: SECExcelAddin contact@example.com` per SEC requirements.  
-Rate limit: 5 requests/second (SEC allows 10; we cap at 5).
+All requests use `User-Agent: SECExcelAddin contact@example.com`. Rate cap: 5 req/sec.
 
----
+### Verification Macros
 
-## Keyword Classification
-
-Concepts are classified by XBRL tag name matching (case-insensitive substring):
-
-**Income Statement (14 keywords):**  
-`Revenue|Sales|CostOfGoods|CostOfRevenue|GrossProfit|OperatingExpenses|OperatingIncome|InterestExpense|IncomeTax|NetIncome|EarningsPerShare|WeightedAverage|ResearchAndDevelopment|SellingGeneralAndAdministrative`
-
-**Cash Flow Statement (13 keywords):**  
-`CashFlow|NetCashProvided|NetCashUsed|PaymentsFor|PaymentsTo|ProceedsFrom|DepreciationDepletionAndAmortization|DepreciationAndAmortization|AllocatedShareBasedCompensation|StockBasedCompensation|CapitalExpenditures|DividendsPaid|RepurchaseOfCommonStock`
-
-**Balance Sheet (15 keywords):**  
-`Assets|Liabilities|StockholdersEquity|CashAndCashEquivalents|Inventory|Receivable|Payable|Debt|Goodwill|IntangibleAssets|PropertyPlantAndEquipment|RetainedEarnings|CommonStock|TreasuryStock|AccumulatedOtherComprehensive`
-
-Concepts matching no keyword are silently skipped (written to no sheet).
-
----
-
-## Error Codes
-
-| Code | Condition | Message |
-|------|-----------|---------| 
-| E1 | Invalid/not found ticker | `"Ticker '{ticker}' not found in SEC database."` |
-| E2 | HTTP 403/429 rate limit | `"SEC rate-limited. Please wait 30 seconds and try again."` |
-| E3 | No network | `"Cannot connect to SEC servers. Check your internet connection."` |
-| E4 | No us-gaap facts | `"No US-GAAP XBRL data found for this company."` |
-| E5 | JSON parse failure | `"Failed to parse SEC response. The data format may have changed."` |
-
----
-
-## Verification Macros
-
-Run any of these via `Alt + F8`:
+Run any via `Alt + F8`:
 
 | Macro | What it tests |
-|-------|--------------|
-| `TestPhase1` | Ticker → CIK resolution (AAPL, MSFT, FAKEXYZ) |
-| `TestPhase2` | JSON fetch, parse, us-gaap navigation |
-| `TestPhase3` | Concept classification (30-concept table), annual/quarterly filter |
-| `TestPhase4` | Full pipeline + 5 cell spot-checks vs SEC JSON |
+|-------|---------------|
+| `TestPhase1` | Ticker → CIK resolution |
+| `TestPhase2` | JSON fetch + us-gaap navigation |
+| `TestPhase3` | Concept classification + annual/quarterly filters |
+| `TestPhase4` | Full pipeline + 5 cell spot-checks |
 | `TestPhase5` | All 5 error messages match PRD §4.5 exactly |
-| `TestPhase6` | 100-cell audit table (10 tickers × 10 checks) vs pre-verified expected values |
+| `TestPhase6` | 100-cell audit table vs live SEC data (10 tickers × 10 checks) |
 
----
+### QA
 
-## Known Limitations (v1)
-
-| Limitation | Detail |
-|------------|--------|
-| **Windows only** | `WinHttp.WinHttpRequest.5.1` and `kernel32.Sleep` are Windows COM objects. Mac Excel is not supported in v1. |
-| **Q4 not shown in quarterly** | Q4 data is not filed in 10-Q (only in 10-K). The add-in does not synthesize Q4 — it appears only in the Annual section. |
-| **10-K/A amendments excluded** | Amended annual filings (`form=10-K/A`) are excluded from the annual section. Only original `10-K` data is shown. If a company filed a material amendment, the original values display instead of the restated ones. |
-| **One unit per concept** | When a concept has multiple unit types (rare), the add-in shows only the preferred unit (USD > USD/shares > shares > pure > first). |
-| **XBRL tags not renamed** | Column A shows raw XBRL concept names (e.g. `RevenueFromContractWithCustomerExcludingAssessedTax`) — no human-friendly labels. |
-| **No IFRS support** | Only `us-gaap` namespace is pulled. Non-US filers using IFRS will show E4 (No XBRL data). |
-| **Large JSON downloads** | Some companies (AAPL ~15 MB, JPM ~25 MB) take 10–30 seconds to download. This is expected — the SEC serves the full facts history in one file. |
-| **Macro security prompt** | On first open, Excel may prompt to enable macros. The add-in requires macros to run. |
+100/100 spot-checks verified against live SEC EDGAR JSON across 10 tickers
+(AAPL, MSFT, GOOGL, AMZN, NEM, JPM, XOM, PFE, TSLA, BRK-B) on 2026-04-27.
 
 ---
 
 ## License
 
-MIT. The bundled `dependencies/JsonConverter.bas` is [VBA-JSON v2.3.1](https://github.com/VBA-tools/VBA-JSON) by Tim Hall, also MIT licensed. See `dependencies/LICENSE-VBA-JSON.txt` for the full license text.
+MIT. The bundled `dependencies/JsonConverter.bas` is [VBA-JSON v2.3.1](https://github.com/VBA-tools/VBA-JSON) by Tim Hall, also MIT licensed. See `dependencies/LICENSE-VBA-JSON.txt`.

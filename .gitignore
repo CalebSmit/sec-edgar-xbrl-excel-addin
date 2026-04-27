@@ -1,7 +1,11 @@
-# Compiled add-in (not checked in — users build from .bas sources)
-*.xlam
+# Compiled add-in artifacts (workspace-level, not for repo)
+# Exception: dist/ folder contains the prebuilt release binary
 *.xlsm
 *.xlsx
+
+# Exclude xlam everywhere EXCEPT the dist/ folder
+*.xlam
+!dist/*.xlam
 
 # Excel temp files
 ~$*
