@@ -11,17 +11,10 @@ No sign-up, no subscriptions, no backend — data comes straight from the SEC.
 
 ### Step 1 — Download the add-in
 
-**[View the latest release →](https://github.com/CalebSmit/sec-edgar-xbrl-excel-addin/releases/tag/v1.0.0)**
-
-On the release page, look for `SEC_XBRL_Addin.xlam` in the **Assets** section and click it to download.
-
-Alternatively, you can download the file directly from the repository:
-1. Go to the [dist folder](https://github.com/CalebSmit/sec-edgar-xbrl-excel-addin/tree/master/dist)
-2. Click `SEC_XBRL_Addin.xlam`
-3. Click the **Download raw file** button (the download icon in the top-right of the file view)
+**[⬇ Download SEC_XBRL_Addin.xlam](https://github.com/CalebSmit/sec-edgar-xbrl-excel-addin/raw/master/dist/SEC_XBRL_Addin.xlam)**
 
 > Save `SEC_XBRL_Addin.xlam` to a folder on your computer (e.g. `Documents\ExcelAddins\`).  
-> Do **not** open it directly from your browser — save it first, then install from Excel.
+> Do **not** open it directly from your browser — right-click and choose **Save link as**, or save it after your browser downloads it.
 
 ---
 
