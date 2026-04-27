@@ -149,11 +149,11 @@ End Function
 '
 ' IMPROVED: Eliminates first-request delay that could trigger SEC bot detection.
 '------------------------------------------------------------------------------
-Private lastRequestTimeMs As Double
-
 Public Function RateLimitedGet(ByVal url As String, _
                                ByRef errCode As String, _
                                ByRef errMsg As String) As String
+    Static lastRequestTimeMs As Double
+
     ' Check time since last request
     Dim nowMs As Double
     nowMs = CDbl(Timer * 1000)
@@ -163,6 +163,9 @@ Public Function RateLimitedGet(ByVal url As String, _
     If lastRequestTimeMs > 0 Then
         Dim timeSinceLastRequestMs As Double
         timeSinceLastRequestMs = nowMs - lastRequestTimeMs
+
+        ' Timer resets at midnight; clamp to zero elapsed if wrap occurred.
+        If timeSinceLastRequestMs < 0 Then timeSinceLastRequestMs = 0
         
         ' Only sleep if less than 200ms has passed
         If timeSinceLastRequestMs < RATE_LIMIT_DELAY_MS Then
