@@ -5,7 +5,7 @@ Attribute VB_Name = "modJSONParser"
 '
 ' Dependency: VBA-JSON (JsonConverter.bas) — MIT license
 '   https://github.com/VBA-tools/VBA-JSON
-'   Must be imported into the VBA project separately (see README).
+'   Bundled in dependencies/JsonConverter.bas (pre-baked into dist/SEC_XBRL_Addin.xlam).
 '
 ' VERIFIED JSON structure (live AAPL test 2026-04-27):
 '   {
