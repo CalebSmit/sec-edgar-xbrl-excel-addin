@@ -73,8 +73,14 @@ Public Function GetHTTP(ByVal url As String, _
     End If
 
     ' SEC-required headers (PRD S3)
+    ' DEBUG: Verify headers are set correctly
+    On Error Resume Next
     http.SetRequestHeader "User-Agent", HTTP_USER_AGENT
     http.SetRequestHeader "Accept", "application/json"
+    On Error GoTo 0
+    
+    Application.StatusBar = "Sending request to: " & Left(url, 50) & "..."
+    DoEvents
 
     ' --- Send --------------------------------------------------------------
     http.Send
@@ -83,13 +89,31 @@ Public Function GetHTTP(ByVal url As String, _
     Dim statusCode As Long
     statusCode = CLng(http.Status)
 
+    ' DEBUG: Log what happened
+    Application.StatusBar = "SEC response: HTTP " & statusCode
+    DoEvents
+
     Select Case statusCode
         Case 200
             GetHTTP = http.ResponseText      ' Raw JSON body
 
         Case 403, 429
+            ' DEBUG: Log rate limit details
+            Dim responseText As String
+            On Error Resume Next
+            responseText = http.ResponseText
+            On Error GoTo 0
+            
             errCode = ERR_HTTP_RATE_LIMITED
-            errMsg = "SEC rate-limited. Please wait 30 seconds and try again."
+            errMsg = "SEC rate-limited (HTTP " & statusCode & "). Please wait 30 seconds and try again."
+            
+            ' If it's a 403, it's often a bot detection issue
+            If statusCode = 403 Then
+                errMsg = "SEC blocked request (HTTP 403). This may indicate:" & vbNewLine & _
+                         "- Add-in is still loaded (close Excel completely)" & vbNewLine & _
+                         "- Multiple rapid requests" & vbNewLine & _
+                         "- Download fresh XLAM from GitHub"
+            End If
 
         Case 404
             ' Caller interprets 404 based on context (ticker not found, etc.)
