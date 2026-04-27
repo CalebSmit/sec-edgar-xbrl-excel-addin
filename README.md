@@ -24,19 +24,25 @@ Each sheet shows both **annual (10-K)** and **quarterly (10-Q)** data, exactly a
 
 ## Installation
 
-### Step 1 — Download VBA-JSON
+### Step 1 — Get the Code
 
-The add-in uses [VBA-JSON](https://github.com/VBA-tools/VBA-JSON) (MIT license) for JSON parsing.
+Clone or download this repository. Everything you need is included:
 
-1. Go to https://github.com/VBA-tools/VBA-JSON/releases
-2. Download `JsonConverter.bas`
-3. Save it to the same folder as `SEC_XBRL_Addin.xlam`
+```
+sec-edgar-xbrl-excel-addin/
+├── modules/          ← All 9 VBA modules (import these into Excel)
+├── dependencies/     ← JsonConverter.bas (VBA-JSON v2.3.1, MIT license)
+├── customUI/         ← Ribbon XML for the Add-ins tab button
+└── README.md
+```
 
-### Step 2 — Open the Add-in in Excel
+No external downloads needed. `JsonConverter.bas` is included in the `dependencies/` folder.
+
+### Step 2 — Import Modules into Excel
 
 1. Open Excel
 2. Press `Alt + F11` to open the VBA editor
-3. In the VBA editor: **File → Import File** → import `JsonConverter.bas`
+3. **File → Import File** → import `dependencies/JsonConverter.bas`
 4. **File → Import File** → import each `.bas` / `.cls` file from the `modules/` folder:
    - `modConfig.bas`
    - `modHTTP.bas`
@@ -210,4 +216,4 @@ Run any of these via `Alt + F8`:
 
 ## License
 
-MIT. VBA-JSON dependency is also MIT licensed (https://github.com/VBA-tools/VBA-JSON).
+MIT. The bundled `dependencies/JsonConverter.bas` is [VBA-JSON v2.3.1](https://github.com/VBA-tools/VBA-JSON) by Tim Hall, also MIT licensed. See `dependencies/LICENSE-VBA-JSON.txt` for the full license text.
