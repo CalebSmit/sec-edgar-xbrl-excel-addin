@@ -26,9 +26,11 @@ Public Const SEC_FACTS_BASE_URL As String = _
 
 ' ---------------------------------------------------------------------------
 ' HTTP Configuration
+' SEC requires User-Agent in format: "AppName email@domain"
+' https://www.sec.gov/about/webmaster-frequently-asked-questions#user-agent
 ' ---------------------------------------------------------------------------
 Public Const HTTP_USER_AGENT As String = _
-    "SEC-XBRL-Excel-Addin (calebsmit@users.noreply.github.com)"
+    "SEC XBRL Excel Add-in calebsmit@users.noreply.github.com"
 Public Const HTTP_TIMEOUT_MS As Long = 30000    ' 30s
 Public Const RATE_LIMIT_DELAY_MS As Long = 200  ' 200ms = 5 req/sec max
 
