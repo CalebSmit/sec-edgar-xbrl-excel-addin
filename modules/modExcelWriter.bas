@@ -339,45 +339,101 @@ End Function
 '==============================================================================
 
 '------------------------------------------------------------------------------
-' GetCellAuditInfo
-' Returns a string describing a specific cell's value and its expected JSON source.
-' Used in TestPhase4 to verify byte-equality between cell value and SEC JSON val.
+' GetCellAuditInfo  (Phase 6 / TestPhase6 version)
+' Searches the given worksheet for a concept row and period column, and
+' returns the cell address and value at their intersection.
+'
+' The worksheet has this layout (written by WriteSection):
+'   Section header row: "=== ANNUAL (10-K) ===" or "=== QUARTERLY (10-Q) ==="
+'   Column-header row:  "XBRL Tag" | "Unit" | date1 | date2 | ...
+'   Data rows:          conceptName | unit | val1 | val2 | ...
 '
 ' Parameters:
 '   wb          — workbook containing the output sheets
-'   sheetName   — one of WS_INCOME_STMT, WS_BALANCE_SHEET, WS_CASH_FLOW
-'   rowNum      — 1-based row
-'   colNum      — 1-based column
+'   sheetName   — WS_INCOME_STMT / WS_BALANCE_SHEET / WS_CASH_FLOW
+'   isAnnual    — True → search the ANNUAL section; False → QUARTERLY section
+'   conceptName — exact XBRL tag string (e.g. "NetIncomeLoss")
+'   periodEnd   — ISO end-date string (e.g. "2025-09-27")
+'   cellAddr    — OUTPUT: Excel cell address (e.g. "D5") or "" if not found
+'   cellVal     — OUTPUT: variant cell value or Empty if not found
 '------------------------------------------------------------------------------
-Public Function GetCellAuditInfo(ByVal wb As Workbook, _
-                                 ByVal sheetName As String, _
-                                 ByVal rowNum As Long, _
-                                 ByVal colNum As Long) As String
-    On Error Resume Next
+Public Sub GetCellAuditInfo(ByVal wb As Workbook, _
+                             ByVal sheetName As String, _
+                             ByVal isAnnual As Boolean, _
+                             ByVal conceptName As String, _
+                             ByVal periodEnd As String, _
+                             ByRef cellAddr As String, _
+                             ByRef cellVal As Variant)
+    cellAddr = ""
+    cellVal = Empty
+
     Dim ws As Worksheet
+    On Error Resume Next
     Set ws = wb.Worksheets(sheetName)
-    If ws Is Nothing Then
-        GetCellAuditInfo = "Sheet not found: " & sheetName
-        Exit Function
-    End If
-
-    Dim cellVal As Variant
-    cellVal = ws.Cells(rowNum, colNum).Value
-
-    Dim tagVal As Variant
-    tagVal = ws.Cells(rowNum, COL_TAG).Value
-
-    Dim unitVal As Variant
-    unitVal = ws.Cells(rowNum, COL_UNIT).Value
-
-    Dim dateHdr As Variant
-    dateHdr = ws.Cells(2, colNum).Value   ' period date from row 2
-
-    GetCellAuditInfo = "Sheet=" & sheetName & _
-                       " R" & rowNum & "C" & colNum & _
-                       " Tag=" & CStr(tagVal) & _
-                       " Period=" & CStr(dateHdr) & _
-                       " Unit=" & CStr(unitVal) & _
-                       " CellValue=" & CStr(cellVal)
     On Error GoTo 0
-End Function
+    If ws Is Nothing Then Exit Sub
+
+    ' Determine which section header to look for
+    Dim targetHeader As String
+    targetHeader = IIf(isAnnual, HDR_ANNUAL, HDR_QUARTERLY)
+
+    ' --- 1. Find the section header row ------------------------------------
+    Dim lastRow As Long
+    lastRow = ws.Cells(ws.Rows.Count, COL_TAG).End(xlUp).Row
+    If lastRow < 1 Then Exit Sub
+
+    Dim sectionHeaderRow As Long
+    sectionHeaderRow = 0
+    Dim r As Long
+    For r = 1 To lastRow
+        If CStr(ws.Cells(r, COL_TAG).Value) = targetHeader Then
+            sectionHeaderRow = r
+            Exit For
+        End If
+    Next r
+    If sectionHeaderRow = 0 Then Exit Sub   ' section not found
+
+    ' --- 2. Find the column-header row (immediately after section header) --
+    Dim colHdrRow As Long
+    colHdrRow = sectionHeaderRow + 1
+
+    ' --- 3. Find the column for periodEnd in the header row ----------------
+    Dim targetCol As Long
+    targetCol = 0
+    Dim lastCol As Long
+    lastCol = ws.Cells(colHdrRow, ws.Columns.Count).End(xlToLeft).Column
+    Dim c As Long
+    For c = COL_DATA_START To lastCol
+        If CStr(ws.Cells(colHdrRow, c).Value) = periodEnd Then
+            targetCol = c
+            Exit For
+        End If
+    Next c
+    If targetCol = 0 Then Exit Sub   ' period column not found
+
+    ' --- 4. Find the row for conceptName in Col A, within this section -----
+    ' Data rows start at colHdrRow + 1 and run until the next section header
+    ' or the last used row.
+    Dim dataStartRow As Long
+    dataStartRow = colHdrRow + 1
+
+    Dim targetRow As Long
+    targetRow = 0
+    For r = dataStartRow To lastRow
+        Dim cellContent As String
+        cellContent = CStr(ws.Cells(r, COL_TAG).Value)
+        ' Stop at the next section header or a blank row that precedes it
+        If cellContent = HDR_ANNUAL Or cellContent = HDR_QUARTERLY Then
+            If r > dataStartRow Then Exit For   ' hit next section
+        End If
+        If cellContent = conceptName Then
+            targetRow = r
+            Exit For
+        End If
+    Next r
+    If targetRow = 0 Then Exit Sub   ' concept row not found
+
+    ' --- 5. Return the address and value ------------------------------------
+    cellAddr = ws.Cells(targetRow, targetCol).Address(False, False)
+    cellVal = ws.Cells(targetRow, targetCol).Value
+End Sub

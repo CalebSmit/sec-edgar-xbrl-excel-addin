@@ -193,6 +193,21 @@ Run any of these via `Alt + F8`:
 
 ---
 
+## Known Limitations (v1)
+
+| Limitation | Detail |
+|------------|--------|
+| **Windows only** | `WinHttp.WinHttpRequest.5.1` and `kernel32.Sleep` are Windows COM objects. Mac Excel is not supported in v1. |
+| **Q4 not shown in quarterly** | Q4 data is not filed in 10-Q (only in 10-K). The add-in does not synthesize Q4 — it appears only in the Annual section. |
+| **10-K/A amendments excluded** | Amended annual filings (`form=10-K/A`) are excluded from the annual section. Only original `10-K` data is shown. If a company filed a material amendment, the original values display instead of the restated ones. |
+| **One unit per concept** | When a concept has multiple unit types (rare), the add-in shows only the preferred unit (USD > USD/shares > shares > pure > first). |
+| **XBRL tags not renamed** | Column A shows raw XBRL concept names (e.g. `RevenueFromContractWithCustomerExcludingAssessedTax`) — no human-friendly labels. |
+| **No IFRS support** | Only `us-gaap` namespace is pulled. Non-US filers using IFRS will show E4 (No XBRL data). |
+| **Large JSON downloads** | Some companies (AAPL ~15 MB, JPM ~25 MB) take 10–30 seconds to download. This is expected — the SEC serves the full facts history in one file. |
+| **Macro security prompt** | On first open, Excel may prompt to enable macros. The add-in requires macros to run. |
+
+---
+
 ## License
 
 MIT. VBA-JSON dependency is also MIT licensed (https://github.com/VBA-tools/VBA-JSON).

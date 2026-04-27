@@ -471,7 +471,12 @@ Public Sub TestPhase3()
             Dim fA As Object
             Set fA = annualDict(CStr(da))
             ws.Cells(dataRow, 1).Value = CStr(da)
-            ws.Cells(dataRow, 2).Value = SafeLong(fA, "val")
+            ' Use CDbl not SafeLong — val can exceed Long max (e.g. AAPL=112B > 2.1B)
+            Dim rawValA As Variant
+            On Error Resume Next
+            rawValA = fA("val")
+            On Error GoTo 0
+            If Not IsEmpty(rawValA) Then ws.Cells(dataRow, 2).Value = CDbl(rawValA)
             ws.Cells(dataRow, 3).Value = SafeString(fA, "filed")
             dataRow = dataRow + 1
         Next da
@@ -500,7 +505,12 @@ Public Sub TestPhase3()
             Dim qF As Object
             Set qF = qDict(qDates(qi))
             ws.Cells(dataRow, 1).Value = qDates(qi)
-            ws.Cells(dataRow, 2).Value = SafeLong(qF, "val")
+            ' Use CDbl not SafeLong — val can exceed Long max
+            Dim rawValQ As Variant
+            On Error Resume Next
+            rawValQ = qF("val")
+            On Error GoTo 0
+            If Not IsEmpty(rawValQ) Then ws.Cells(dataRow, 2).Value = CDbl(rawValQ)
             ws.Cells(dataRow, 3).Value = SafeString(qF, "fp")
             ws.Cells(dataRow, 4).Value = SafeString(qF, "filed")
             dataRow = dataRow + 1

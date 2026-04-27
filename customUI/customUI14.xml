@@ -15,8 +15,9 @@
   7. Close RibbonX Editor, reopen Excel.
   8. The "SEC EDGAR" tab will appear in the Ribbon.
 
-  The onAction callback "PullSECFinancials" maps to the public
-  Sub PullSECFinancials() in modMain.bas.
+  The onAction callback "RibbonCallback_PullSECFinancials" maps to the
+  Public Sub RibbonCallback_PullSECFinancials() in modRibbon.bas,
+  which in turn calls PullSECFinancials() in modMain.bas.
 -->
 <customUI xmlns="http://schemas.microsoft.com/office/2009/07/customui">
   <ribbon startFromScratch="false">
