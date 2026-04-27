@@ -189,9 +189,13 @@ Public Function IsAnnualFact(ByVal fact As Object) As Boolean
         IsAnnualFact = True
     Else
         ' Duration fact  -  require >= 300 days for full-year
+        Dim startDt As Date
+        Dim endDt As Date
+        If Not TryParseISODate(SafeString(fact, "start"), startDt) Then Exit Function
+        If Not TryParseISODate(SafeString(fact, "end"), endDt) Then Exit Function
+
         Dim dur As Long
-        dur = DateDiff("d", CDate(SafeString(fact, "start")), _
-                           CDate(SafeString(fact, "end")))
+        dur = DateDiff("d", startDt, endDt)
         IsAnnualFact = (dur >= 300)
     End If
 End Function
@@ -223,11 +227,52 @@ Public Function IsQuarterlyFact(ByVal fact As Object) As Boolean
         ' Instant fact  -  valid for BS quarterly
         IsQuarterlyFact = True
     Else
+        Dim startDt As Date
+        Dim endDt As Date
+        If Not TryParseISODate(SafeString(fact, "start"), startDt) Then Exit Function
+        If Not TryParseISODate(SafeString(fact, "end"), endDt) Then Exit Function
+
         Dim dur As Long
-        dur = DateDiff("d", CDate(SafeString(fact, "start")), _
-                           CDate(SafeString(fact, "end")))
+        dur = DateDiff("d", startDt, endDt)
         IsQuarterlyFact = (dur >= 60 And dur <= 110)
     End If
+End Function
+
+'------------------------------------------------------------------------------
+' TryParseISODate
+' Parses SEC date strings in "YYYY-MM-DD" format in a locale-independent way.
+'------------------------------------------------------------------------------
+Private Function TryParseISODate(ByVal isoDate As String, ByRef outDate As Date) As Boolean
+    TryParseISODate = False
+
+    If Len(isoDate) < 10 Then Exit Function
+    If Mid$(isoDate, 5, 1) <> "-" Or Mid$(isoDate, 8, 1) <> "-" Then Exit Function
+
+    On Error GoTo ParseFailed
+
+    Dim yyyy As Integer
+    Dim mm As Integer
+    Dim dd As Integer
+
+    yyyy = CInt(Mid$(isoDate, 1, 4))
+    mm = CInt(Mid$(isoDate, 6, 2))
+    dd = CInt(Mid$(isoDate, 9, 2))
+
+    If yyyy < 1900 Or yyyy > 2200 Then Exit Function
+    If mm < 1 Or mm > 12 Then Exit Function
+    If dd < 1 Or dd > 31 Then Exit Function
+
+    outDate = DateSerial(yyyy, mm, dd)
+
+    If Year(outDate) <> yyyy Or Month(outDate) <> mm Or Day(outDate) <> dd Then
+        Exit Function
+    End If
+
+    TryParseISODate = True
+    Exit Function
+
+ParseFailed:
+    TryParseISODate = False
 End Function
 
 '------------------------------------------------------------------------------

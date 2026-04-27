@@ -5,6 +5,14 @@
 Pull live financial statement data from the SEC EDGAR database directly into Excel.
 No sign-up, no subscriptions, no backend — data comes straight from the SEC.
 
+## Latest Reliability Fixes (2026-04-27)
+
+- Output now writes to your active workbook instead of the hidden add-in workbook.
+- SEC ISO dates are parsed in a locale-independent way to avoid regional date issues.
+- `Ctrl + Shift + S` shortcut now targets the add-in macro explicitly.
+- HTTP requests now use a compliant SEC identity string (project URL + contact).
+- JSON parsing no longer hard-requires Microsoft Scripting Runtime.
+
 ---
 
 ## Download & Install
@@ -100,6 +108,8 @@ The add-in fetches data from SEC EDGAR and fills three worksheets:
 - **Balance Sheet** — Assets, liabilities, equity, cash, goodwill, debt
 - **Cash Flow** — Operating/investing/financing flows, capex, D&A
 
+Sheets are written into your **currently active workbook** (the workbook you have open), not into the hidden add-in file.
+
 Both **annual (10-K)** and **quarterly (10-Q)** data appear side by side.
 
 ---
@@ -109,6 +119,7 @@ Both **annual (10-K)** and **quarterly (10-Q)** data appear side by side.
 - Windows 10 or 11
 - Microsoft Excel 2016 or newer (Microsoft 365 works too)
 - Internet connection (to fetch SEC data)
+- Windows Scripting support enabled (default on standard Windows installs)
 
 > **Mac not supported.** The add-in uses Windows-only COM objects.
 
@@ -186,8 +197,8 @@ If you want to build the add-in yourself from VBA source:
    - `modProgress.bas`, `modRibbon.bas`, `modMain.bas`
 4. Import `modules/ThisWorkbook.cls` into the **existing ThisWorkbook** module (do not create a new one)
 5. **Tools → References** → check:
-   - ✅ Microsoft Scripting Runtime
    - ✅ Microsoft XML, v6.0
+   - *(Optional)* Microsoft Scripting Runtime
 6. *(Optional)* Use [Office RibbonX Editor](https://github.com/fernandreu/office-ribbonx-editor) to inject `customUI/customUI14.xml` for the ribbon button
 7. **File → Save As** → type: **Excel Add-in (.xlam)** → save as `SEC_XBRL_Addin.xlam`
 
@@ -214,7 +225,7 @@ SEC_XBRL_Addin.xlam
 | Ticker → CIK | `https://www.sec.gov/files/company_tickers.json` |
 | Company Facts | `https://data.sec.gov/api/xbrl/companyfacts/CIK{10-digit}.json` |
 
-All requests use `User-Agent: SECExcelAddin contact@example.com`. Rate cap: 5 req/sec.
+All requests use a compliant SEC identity string with project URL + contact. Rate cap: 5 req/sec.
 
 ### Verification Macros
 

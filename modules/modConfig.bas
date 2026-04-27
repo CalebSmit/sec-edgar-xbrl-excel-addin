@@ -27,7 +27,8 @@ Public Const SEC_FACTS_BASE_URL As String = _
 ' ---------------------------------------------------------------------------
 ' HTTP Configuration
 ' ---------------------------------------------------------------------------
-Public Const HTTP_USER_AGENT As String = "SECExcelAddin contact@example.com"
+Public Const HTTP_USER_AGENT As String = _
+    "SEC-XBRL-Excel-Addin/1.0 (https://github.com/CalebSmit/sec-edgar-xbrl-excel-addin; calebsmit@users.noreply.github.com)"
 Public Const HTTP_TIMEOUT_MS As Long = 30000    ' 30s
 Public Const RATE_LIMIT_DELAY_MS As Long = 200  ' 200ms = 5 req/sec max
 

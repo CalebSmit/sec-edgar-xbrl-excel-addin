@@ -85,10 +85,27 @@ Public Sub PullSECFinancials()
         Exit Sub
     End If
 
-    ' --- Phase 4: Write three worksheets -----------------------------------
+    ' --- Phase 4: Choose target workbook + write three worksheets ----------
     ShowProgress PROG_WRITING_IS
+    Dim targetWb As Workbook
+    Set targetWb = ResolveOutputWorkbook()
+
+    If targetWb Is Nothing Then
+        ClearProgress
+        MsgBox "No writable workbook is available. Open or create a workbook and try again.", _
+               vbExclamation, "SEC EDGAR  -  No Target Workbook"
+        Exit Sub
+    End If
+
+    If targetWb.ReadOnly Then
+        ClearProgress
+        MsgBox "The target workbook ('" & targetWb.Name & "') is read-only. Open a writable workbook and try again.", _
+               vbExclamation, "SEC EDGAR  -  Read-Only Workbook"
+        Exit Sub
+    End If
+
     ' WriteAllSheets manages its own per-sheet status messages internally
-    WriteAllSheets ThisWorkbook, isCol, bsCol, cfsCol, UCase(Trim(ticker))
+    WriteAllSheets targetWb, isCol, bsCol, cfsCol, UCase(Trim(ticker))
 
     ShowProgress PROG_DONE
     ClearProgress
@@ -96,12 +113,49 @@ Public Sub PullSECFinancials()
     ' --- Success summary ---------------------------------------------------
     MsgBox "Data written for " & companyName & " (" & UCase(Trim(ticker)) & ")" & vbCrLf & _
            "CIK: " & cik10 & vbCrLf & _
+           "Workbook: " & targetWb.Name & vbCrLf & _
            "Income Statement: " & isN & " concepts" & vbCrLf & _
            "Balance Sheet: "   & bsN & " concepts" & vbCrLf & _
            "Cash Flow: "       & cfsN & " concepts" & vbCrLf & _
            "JSON size: "       & GetResponseSize(jsonText), _
            vbInformation, "SEC EDGAR  -  Complete"
 End Sub
+
+'------------------------------------------------------------------------------
+' ResolveOutputWorkbook
+' Returns a visible user workbook to receive output sheets.
+' Falls back to creating a new workbook if only the add-in workbook is loaded.
+'------------------------------------------------------------------------------
+Private Function ResolveOutputWorkbook() As Workbook
+    Dim wb As Workbook
+
+    On Error Resume Next
+    Set wb = Application.ActiveWorkbook
+    On Error GoTo 0
+
+    If wb Is Nothing Or wb Is ThisWorkbook Then
+        Dim candidate As Workbook
+        For Each candidate In Application.Workbooks
+            If Not candidate Is ThisWorkbook Then
+                Set wb = candidate
+                Exit For
+            End If
+        Next candidate
+    End If
+
+    If wb Is Nothing Then
+        On Error GoTo CreateWorkbookFailed
+        Set wb = Application.Workbooks.Add
+        On Error GoTo 0
+    End If
+
+    Set ResolveOutputWorkbook = wb
+    Exit Function
+
+CreateWorkbookFailed:
+    On Error GoTo 0
+    Set ResolveOutputWorkbook = Nothing
+End Function
 
 '==============================================================================
 ' PHASE 1 VERIFICATION MACRO

@@ -34,7 +34,9 @@ End Sub
 '------------------------------------------------------------------------------
 Public Sub RegisterShortcut()
     ' Ctrl+Shift+S -> PullSECFinancials
-    Application.OnKey "^+S", "PullSECFinancials"
+    Dim escapedName As String
+    escapedName = Replace(ThisWorkbook.Name, "'", "''")
+    Application.OnKey "^+S", "'" & escapedName & "'!PullSECFinancials"
 End Sub
 
 '------------------------------------------------------------------------------
