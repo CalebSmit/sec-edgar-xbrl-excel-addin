@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  SEC EDGAR XBRL Add-in — Custom Ribbon XML
+  Office 2010+ (customUI14.xml)
+  xmlns: http://schemas.microsoft.com/office/2009/07/customui
+
+  HOW TO INSTALL:
+  1. Close Excel completely.
+  2. Open the free "Office RibbonX Editor" tool:
+       https://github.com/OfficeDev/office-ribbonx-editor/releases
+  3. File → Open → select SEC_XBRL_Addin.xlam
+  4. Insert → Office 2010+ Custom UI Part
+  5. Paste this entire XML into the editor pane.
+  6. Validate XML (Ctrl+Enter), then Save (Ctrl+S).
+  7. Close RibbonX Editor, reopen Excel.
+  8. The "SEC EDGAR" tab will appear in the Ribbon.
+
+  The onAction callback "PullSECFinancials" maps to the public
+  Sub PullSECFinancials() in modMain.bas.
+-->
+<customUI xmlns="http://schemas.microsoft.com/office/2009/07/customui">
+  <ribbon startFromScratch="false">
+    <tabs>
+      <tab id="tabSECEdgar" label="SEC EDGAR">
+        <group id="grpPullData" label="Pull Data">
+          <button
+            id="btnPullFinancials"
+            label="Pull SEC Financials"
+            screentip="Fetch XBRL financial data from SEC EDGAR"
+            supertip="Enter a ticker symbol (e.g. AAPL) to retrieve Income Statement, Balance Sheet, and Cash Flow data directly from the SEC EDGAR public API."
+            size="large"
+            imageMso="DataRefreshAll"
+            onAction="RibbonCallback_PullSECFinancials"/>
+        </group>
+      </tab>
+    </tabs>
+  </ribbon>
+</customUI>

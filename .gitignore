@@ -1,0 +1,23 @@
+# Compiled add-in (not checked in — users build from .bas sources)
+*.xlam
+*.xlsm
+*.xlsx
+
+# Excel temp files
+~$*
+*.tmp
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+desktop.ini
+
+# VBA export artifacts
+*.frm
+*.frx
+
+# Python audit scripts (workspace only, not part of the add-in)
+__pycache__/
+*.pyc
