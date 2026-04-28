@@ -52,7 +52,7 @@ If you skip Unblock or Trusted Location, the ribbon tab may not appear.
 
 **Latest Download:**
 
-- **[⬇ SEC_XBRL_Addin.xlam (master/dist)](https://github.com/CalebSmit/sec-edgar-xbrl-excel-addin/raw/master/dist/SEC_XBRL_Addin.xlam)**
+- **[⬇ SEC_XBRL_Addin.xlam — v1.0.6](https://github.com/CalebSmik/sec-edgar-xbrl-excel-addin/raw/v1.0.6/dist/SEC_XBRL_Addin.xlam)**
 - **[Releases page](https://github.com/CalebSmit/sec-edgar-xbrl-excel-addin/releases)**
 
 **Latest Source Code:**
