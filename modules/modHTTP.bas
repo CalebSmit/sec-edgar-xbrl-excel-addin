@@ -203,7 +203,11 @@ Private Function ApplySECHeaders(ByVal http As Object, ByRef errCode As String, 
     End If
 
     http.SetRequestHeader "Accept", "application/json"
-    http.SetRequestHeader "Accept-Encoding", "gzip, deflate"
+    ' NOTE: Do NOT set Accept-Encoding gzip/deflate.
+    ' WinHttp.WinHttpRequest and MSXML2.ServerXMLHTTP do NOT auto-decompress.
+    ' Requesting gzip causes the SEC to send compressed binary that VBA cannot
+    ' parse as text -> E5 "Failed to parse SEC response" on every call.
+    ' Omitting this header lets the SEC send plain UTF-8 JSON that works correctly.
 
     Dim contactEmail As String
     contactEmail = ExtractContactEmail(HTTP_USER_AGENT)
