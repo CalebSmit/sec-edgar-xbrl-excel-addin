@@ -23,7 +23,7 @@ No sign-up, no subscriptions, no backend — data comes straight from the SEC.
 
 **Latest Download:**
 
-- **[⬇ SEC_XBRL_Addin.xlam (master/dist)](https://github.com/CalebSmit/sec-edgar-xbrl-excel-addin/raw/master/dist/SEC_XBRL_Addin.xlam)**
+- **[⬇ SEC_XBRL_Addin_FINAL_2026-04-27.xlam (master/dist)](https://github.com/CalebSmit/sec-edgar-xbrl-excel-addin/raw/master/dist/SEC_XBRL_Addin_FINAL_2026-04-27.xlam)**
 - **[Releases page](https://github.com/CalebSmit/sec-edgar-xbrl-excel-addin/releases)**
 
 **Latest Source Code:**

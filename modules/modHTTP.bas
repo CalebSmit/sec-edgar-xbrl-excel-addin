@@ -37,6 +37,11 @@ Private mRandomSeeded As Boolean
 '   errCode  -  output: "" on success; ERR_* on failure
 '   errMsg   -  output: user-facing message for MsgBox
 '------------------------------------------------------------------------------
+Private Function GetHTTP(ByVal url As String, _
+                         ByRef errCode As String, _
+                         ByRef errMsg As String, _
+                         Optional ByRef outStatusCode As Long = 0, _
+                         Optional ByRef outRetryAfterSec As Long = 0) As String
     GetHTTP = ""
     errCode = ""
     errMsg = ""
@@ -73,7 +78,7 @@ Private mRandomSeeded As Boolean
             outRetryAfterSec = altRetryAfterSec
         End If
     End If
-NetworkError:
+End Function
 
 Private Function ExecuteSingleRequest(ByVal url As String, _
                                       ByVal preferWinHttp As Boolean, _
@@ -223,11 +228,6 @@ Private Function ExtractContactEmail(ByVal userAgent As String) As String
             ExtractContactEmail = candidate
         End If
     End If
-End Function
-    Application.StatusBar = False
-    errCode = ERR_NO_NETWORK
-    errMsg = "Cannot connect to SEC servers. Check your internet connection."
-    If Not http Is Nothing Then Set http = Nothing
 End Function
 
 '------------------------------------------------------------------------------
