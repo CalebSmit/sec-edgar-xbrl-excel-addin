@@ -175,6 +175,7 @@ Every commit that changes functionality must update the README:
 - **Keep all existing troubleshooting sections intact**
 
 ## Version History
+- **v1.0.8** — fixed compile error from misplaced UDT in modClassifier; added top-level error trap to clear StatusBar on any failure; build script now rejects non-ASCII source bytes
 - **v1.0.7** — replaced VBA-purge build with Excel-COM rebuild (`scripts/build_xlam.ps1`); hardened Workbook_Open; added `PullSECFinancialsForTicker` entry point
 - **v1.0.6** — VBA purging applied; modConfig load error permanently fixed (since superseded by v1.0.7's clean rebuild)
 - **v1.0.5** — compressor fix attempt (partial)

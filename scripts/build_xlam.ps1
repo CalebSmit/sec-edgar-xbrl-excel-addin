@@ -67,6 +67,35 @@ if ($missing.Count -gt 0) {
   exit 1
 }
 
+# Reject any non-ASCII bytes in module sources. VBA's import treats .bas/.cls
+# files as ANSI/Windows-1252; UTF-8 multi-byte chars (em-dashes, smart quotes,
+# etc.) get re-interpreted as garbage and can corrupt comments or, worse,
+# string/identifier tokens. Forcing ASCII keeps the import deterministic.
+$asciiCheckPaths = @()
+foreach ($n in $standardModules + @($thisWorkbookCls)) { $asciiCheckPaths += Join-Path $modulesDir $n }
+$asciiCheckPaths += $jcPath
+
+$asciiBad = @()
+foreach ($p in $asciiCheckPaths) {
+  if (-not (Test-Path $p)) { continue }
+  $bytes = [System.IO.File]::ReadAllBytes($p)
+  for ($i=0; $i -lt $bytes.Length; $i++) {
+    if ($bytes[$i] -gt 127) {
+      $lineNum = 1
+      for ($j=0; $j -lt $i; $j++) { if ($bytes[$j] -eq 10) { $lineNum++ } }
+      $asciiBad += ("  {0} line {1} : non-ASCII byte 0x{2:x2}" -f $p, $lineNum, $bytes[$i])
+      break  # one finding per file is enough
+    }
+  }
+}
+if ($asciiBad.Count -gt 0) {
+  Write-Host 'ERROR: source files contain non-ASCII bytes (will corrupt VBA import):' -ForegroundColor Red
+  $asciiBad | ForEach-Object { Write-Host $_ }
+  Write-Host '  Replace em-dashes / smart-quotes / other Unicode with plain ASCII.'
+  exit 1
+}
+Write-Host '  ASCII-only source check: OK' -ForegroundColor Green
+
 # ---------------------------------------------------------------------------
 # 2. Verify VBOM trust setting
 # ---------------------------------------------------------------------------

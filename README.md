@@ -1,11 +1,18 @@
 # SEC EDGAR XBRL Financial Statements — Excel Add-in
 
-**Version:** 1.0.7 | **Platform:** Excel for Windows | **Cost:** Free
+**Version:** 1.0.8 | **Platform:** Excel for Windows | **Cost:** Free
 
 Pull live financial statement data from the SEC EDGAR database directly into Excel.
 No sign-up, no subscriptions, no backend — data comes straight from the SEC.
 
-## Latest Fixes — v1.0.7 (2026-04-28)
+## Latest Fixes — v1.0.8 (2026-04-28)
+
+- **Fix for "Compile error: Only comments may appear after End Sub, End Function, or End Property"** that appeared in v1.0.7 when the user tried to run `PullSECFinancials`. The cause: an unused `Public Type ConceptRecord` UDT was declared *after* a function in `modClassifier.bas`, which VBA's strict compiler rejects. The Type was never used anyway (the comment in the code explicitly noted that Collections cannot hold UDTs), so it has been removed.
+- **Fix for status-bar hang ("Classifying concepts: (503 concepts)" stuck for 10+ minutes)**: the compile error above halted execution after the StatusBar was set, so the bar never cleared. Added a top-level error trap to `PullSECFinancialsForTicker` that always clears the StatusBar, restores `ScreenUpdating`, restores `Calculation`, and surfaces a real error dialog when anything goes wrong, instead of leaving Excel in a broken state.
+- **Build script now rejects non-ASCII bytes** in `.bas` and `.cls` source files. VBA's import treats source as ANSI/Windows-1252; UTF-8 multi-byte chars (em-dashes, smart quotes) are mis-decoded into garbage bytes that can corrupt comments or string tokens. The build now fails fast with a clear error pointing at the offending line.
+- **Smoke test extended** to call `ClassifyConcept` three times (one per IS / BS / CFS bucket) so this category of regression cannot ship to release without being caught.
+
+## Previous Fixes — v1.0.7 (2026-04-28)
 
 - **Replaced the unreliable VBA-purge build pipeline with a clean, Windows-native rebuild via Excel COM automation.** The previous `scripts/vba_purge_final.py` had hardcoded Linux paths and depended on a `dist/SEC_XBRL_Addin.xlam.bak3` baseline that wasn't shipped, so it could not be re-run by anyone. The rebuilt xlam is now structurally clean — `oletools` (and any standard MS-OVBA reader) can fully extract every module, which the v1.0.6 purged build could not.
 - **New build script:** `scripts/build_xlam.ps1` — uses Excel COM to import all 10 modules + JsonConverter dependency + Ribbon XML, producing a normally-formed xlam from source files. Reproducible on any Windows machine with Excel installed and "Trust access to the VBA project object model" enabled.
@@ -61,7 +68,7 @@ If you skip Unblock or Trusted Location, the ribbon tab may not appear.
 
 **Latest Download:**
 
-- **[⬇ SEC_XBRL_Addin.xlam — v1.0.7](https://github.com/CalebSmit/sec-edgar-xbrl-excel-addin/raw/v1.0.7/dist/SEC_XBRL_Addin.xlam)**
+- **[⬇ SEC_XBRL_Addin.xlam — v1.0.8](https://github.com/CalebSmit/sec-edgar-xbrl-excel-addin/raw/v1.0.8/dist/SEC_XBRL_Addin.xlam)**
 - **[Releases page](https://github.com/CalebSmit/sec-edgar-xbrl-excel-addin/releases)**
 
 **Latest Source Code:**

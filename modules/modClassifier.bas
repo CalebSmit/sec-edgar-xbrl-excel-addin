@@ -107,28 +107,12 @@ End Function
 ' SECTION 2  -  Full Concept Extraction and Separation
 '==============================================================================
 
-'------------------------------------------------------------------------------
-' ConceptRecord
-' Lightweight Type to hold one classified concept's data.
-' Stored in a Collection; passed to modExcelWriter.
-'
-' Fields:
-'   ConceptName    -  exact XBRL tag (e.g. "NetIncomeLoss")
-'   Bucket         -  IS / BS / CFS
-'   MatchedKW      -  which keyword triggered (for audit/debug)
-'   AnnualData     -  Scripting.Dictionary: end_date -> fact Dictionary (deduped)
-'   QuarterlyData  -  Scripting.Dictionary: end_date -> fact Dictionary (deduped)
-'   Units          -  e.g. "USD", "USD/shares", "shares", "pure"
-'                   (first unit key only; multi-unit concepts use USD preferentially)
-'------------------------------------------------------------------------------
-Public Type ConceptRecord
-    ConceptName As String
-    Bucket As String
-    MatchedKW As String
-    AnnualData As Object      ' Scripting.Dictionary
-    QuarterlyData As Object   ' Scripting.Dictionary
-    Units As String
-End Type
+' NOTE: A "Public Type ConceptRecord" UDT was previously declared here but
+' (a) was never used (Collections cannot hold UDTs anyway -- see comment below)
+' and (b) was placed AFTER a Function in the module, which VBA's strict
+' compiler rejects with "Compile error: Only comments may appear after End
+' Sub, End Function, or End Property". The records are passed as
+' Scripting.Dictionary objects with the keys listed in ClassifyAllConcepts.
 
 '------------------------------------------------------------------------------
 ' ClassifyAllConcepts

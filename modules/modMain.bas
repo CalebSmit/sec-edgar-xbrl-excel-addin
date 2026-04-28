@@ -40,6 +40,11 @@ End Sub
 '------------------------------------------------------------------------------
 Public Sub PullSECFinancialsForTicker(ByVal ticker As String, _
                                       Optional ByVal silent As Boolean = False)
+    ' Top-level error trap: ensures the status bar is always cleared and the
+    ' user sees a real error dialog if anything (compile, runtime, COM)
+    ' fails - instead of a frozen "Classifying concepts..." status forever.
+    On Error GoTo PipelineFailed
+
     ' --- Phase 1: Resolve ticker -> CIK (E1/E3/E5) -------------------------
     ShowProgress PROG_RESOLVING
 
@@ -139,6 +144,24 @@ Public Sub PullSECFinancialsForTicker(ByVal ticker As String, _
                "Cash Flow: "       & cfsN & " concepts" & vbCrLf & _
                "JSON size: "       & GetResponseSize(jsonText), _
                vbInformation, "SEC EDGAR  -  Complete"
+    End If
+    Exit Sub
+
+PipelineFailed:
+    ' Capture the error, clear UI state, then surface a clear message.
+    Dim trapNum As Long, trapDesc As String, trapSrc As String
+    trapNum = Err.Number
+    trapDesc = Err.Description
+    trapSrc = Err.Source
+    ClearProgress
+    Application.ScreenUpdating = True
+    Application.Calculation = xlCalculationAutomatic
+    If Not silent Then
+        MsgBox "Unexpected error during SEC EDGAR pull:" & vbCrLf & vbCrLf & _
+               "Error " & trapNum & " (" & trapSrc & ")" & vbCrLf & _
+               trapDesc & vbCrLf & vbCrLf & _
+               "Try again, or report this with the ticker '" & ticker & "'.", _
+               vbCritical, "SEC EDGAR  -  Pipeline Error"
     End If
 End Sub
 
