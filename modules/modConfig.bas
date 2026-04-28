@@ -31,7 +31,7 @@ Public Const SEC_FACTS_BASE_URL As String = _
 ' SEC rate limit: 10 requests/second max (as of 2026).
 ' ---------------------------------------------------------------------------
 Public Const HTTP_USER_AGENT As String = _
-    "SEC XBRL Excel Add-in sec-addin@github.io"
+    "SEC-XBRL-Addin sec-xbrl-addin@outlook.com"
 Public Const HTTP_TIMEOUT_MS As Long = 30000    ' 30s
 Public Const RATE_LIMIT_DELAY_MS As Long = 110  ' 110ms = ~9 req/sec (safely under 10/s SEC limit)
 Public Const HTTP_MAX_RETRIES As Long = 4       ' Initial try + 4 retries on transient errors

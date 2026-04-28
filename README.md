@@ -1,11 +1,15 @@
 # SEC EDGAR XBRL Financial Statements — Excel Add-in
 
-**Version:** 1.0.3 | **Platform:** Excel for Windows | **Cost:** Free
+**Version:** 1.0.4 | **Platform:** Excel for Windows | **Cost:** Free
 
 Pull live financial statement data from the SEC EDGAR database directly into Excel.
 No sign-up, no subscriptions, no backend — data comes straight from the SEC.
 
-## Latest Fixes — v1.0.3 (2026-04-28)
+## Latest Fixes — v1.0.4 (2026-04-28)
+
+- **Fix for E2 SEC Rate Limit / HTTP 403 error**: updated User-Agent string to . SEC requires a real, reachable contact address in the UA — the previous  address was rejected by SEC's rate-limiter with a persistent 403 even after retries. The new UA passes SEC's validation.
+
+## Previous Fixes — v1.0.3 (2026-04-28)
 
 - **Root-cause fix for E5 "Parse Error"**: removed `Accept-Encoding: gzip, deflate` request header. Excel's WinHTTP stack does not auto-decompress gzip responses, so SEC's compressed JSON arrived as binary garbage and VBA-JSON failed to parse it. The header is now gone — SEC returns plain UTF-8 JSON and parsing succeeds every time.
 - VBA compressed source in the xlam binary patched directly (MS-OVBA stream level) so Excel re-compiles the corrected code regardless of p-code version mismatch.
