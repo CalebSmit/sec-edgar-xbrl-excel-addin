@@ -10,6 +10,9 @@ Attribute VB_Name = "modHTTP"
 '   - User-Agent: "AppName email@domain" (real domain required per SEC FAQ)
 '   - Rate cap: 10 req/sec max per SEC docs; 110ms delay = ~9 req/sec safe
 '   - HTTPS only
+'   - IMPORTANT: Do NOT send Accept-Encoding: gzip header.
+'     WinHttp and MSXML2.ServerXMLHTTP do NOT auto-decompress gzip responses.
+'     Without this header, SEC returns plain UTF-8 JSON that VBA can parse.
 '
 ' VERIFIED field names / endpoints: none referenced here  -  this module is
 ' purely transport. Endpoints are in modConfig.
@@ -203,11 +206,7 @@ Private Function ApplySECHeaders(ByVal http As Object, ByRef errCode As String, 
     End If
 
     http.SetRequestHeader "Accept", "application/json"
-    ' NOTE: Do NOT set Accept-Encoding gzip/deflate.
-    ' WinHttp.WinHttpRequest and MSXML2.ServerXMLHTTP do NOT auto-decompress.
-    ' Requesting gzip causes the SEC to send compressed binary that VBA cannot
-    ' parse as text -> E5 "Failed to parse SEC response" on every call.
-    ' Omitting this header lets the SEC send plain UTF-8 JSON that works correctly.
+    'Accept-Encoding omitted: SEC returns plain JSON w/o it
 
     Dim contactEmail As String
     contactEmail = ExtractContactEmail(HTTP_USER_AGENT)
@@ -237,11 +236,6 @@ End Function
 '------------------------------------------------------------------------------
 ' RateLimitedGet
 ' Smart rate limiting: only sleep if the last request was recent.
-' This avoids unnecessary delays on the first request while still enforcing
-' the 200ms inter-request spacing for subsequent calls (5 req/sec cap).
-' Uses millisecond-accurate kernel32 Sleep() for precision.
-'
-' IMPROVED: Eliminates first-request delay that could trigger SEC bot detection.
 '------------------------------------------------------------------------------
 Public Function RateLimitedGet(ByVal url As String, _
                                ByRef errCode As String, _
@@ -355,7 +349,6 @@ Private Function ComputeRetryDelayMs(ByVal attempt As Long, ByVal retryAfterSec 
 
     If expDelay > HTTP_RETRY_MAX_MS Then expDelay = HTTP_RETRY_MAX_MS
 
-    ' Small jitter avoids repeated synchronized retries.
     Dim jitterMs As Long
     If Not mRandomSeeded Then
         Randomize
@@ -389,24 +382,13 @@ Private Function TryGetRetryAfterSeconds(ByVal http As Object) As Long
     If IsNumeric(retryAfterRaw) Then
         TryGetRetryAfterSeconds = CLng(retryAfterRaw)
     Else
-        ' HTTP-date Retry-After parsing omitted; use exponential backoff fallback.
         TryGetRetryAfterSeconds = 0
     End If
 End Function
 
 '------------------------------------------------------------------------------
 ' FetchCompanyFacts
-' Phase 2 addition: Fetches the full companyfacts JSON for a 10-digit CIK.
-' Returns the raw JSON string on success; sets errCode/errMsg on failure.
-'
-' Also checks for an empty or unusably small response (guards against
-' truncated downloads on large payloads like AAPL ~15 MB).
-'
-' Verified endpoint (live test 2026-04-27):
-'   https://data.sec.gov/api/xbrl/companyfacts/CIK0000320193.json
-'   -> top keys: ["cik", "entityName", "facts"]
-'   -> facts keys: ["dei", "us-gaap"]
-'   -> AAPL has 503 us-gaap concepts, 24,492 total facts
+' Fetches the full companyfacts JSON for a 10-digit CIK.
 '------------------------------------------------------------------------------
 Public Function FetchCompanyFacts(ByVal cik10 As String, _
                                   ByRef errCode As String, _
@@ -421,14 +403,11 @@ Public Function FetchCompanyFacts(ByVal cik10 As String, _
     Dim jsonText As String
     jsonText = RateLimitedGet(factsURL, errCode, errMsg)
 
-    ' Propagate any HTTP errors
     If errCode <> "" Then
         Application.StatusBar = False
         Exit Function
     End If
 
-    ' Guard: response must be non-trivially large (at least 100 chars)
-    ' A valid facts JSON for even tiny filers is several KB
     If Len(jsonText) < 100 Then
         errCode = ERR_JSON_PARSE
         errMsg = "Failed to parse SEC response. The data format may have changed."
@@ -442,7 +421,6 @@ End Function
 
 '------------------------------------------------------------------------------
 ' GetResponseSize
-' Utility: returns Len(jsonText) in KB for status-bar display.
 '------------------------------------------------------------------------------
 Public Function GetResponseSize(ByVal jsonText As String) As String
     GetResponseSize = Format(Len(jsonText) / 1024, "#,##0") & " KB"
