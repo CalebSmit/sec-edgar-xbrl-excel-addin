@@ -1,11 +1,20 @@
 # SEC EDGAR XBRL Financial Statements — Excel Add-in
 
-**Version:** 1.0.6 | **Platform:** Excel for Windows | **Cost:** Free
+**Version:** 1.0.7 | **Platform:** Excel for Windows | **Cost:** Free
 
 Pull live financial statement data from the SEC EDGAR database directly into Excel.
 No sign-up, no subscriptions, no backend — data comes straight from the SEC.
 
-## Latest Fixes — v1.0.6 (2026-04-28)
+## Latest Fixes — v1.0.7 (2026-04-28)
+
+- **Replaced the unreliable VBA-purge build pipeline with a clean, Windows-native rebuild via Excel COM automation.** The previous `scripts/vba_purge_final.py` had hardcoded Linux paths and depended on a `dist/SEC_XBRL_Addin.xlam.bak3` baseline that wasn't shipped, so it could not be re-run by anyone. The rebuilt xlam is now structurally clean — `oletools` (and any standard MS-OVBA reader) can fully extract every module, which the v1.0.6 purged build could not.
+- **New build script:** `scripts/build_xlam.ps1` — uses Excel COM to import all 10 modules + JsonConverter dependency + Ribbon XML, producing a normally-formed xlam from source files. Reproducible on any Windows machine with Excel installed and "Trust access to the VBA project object model" enabled.
+- **Hardened `Workbook_Open` and `RegisterShortcut` / `UnregisterShortcut`** with `On Error Resume Next` so an unusual workbook name (e.g. renamed install) cannot cause a runtime-error popup at Excel startup. The Ribbon button continues to work even if the keyboard-shortcut hook fails.
+- **New entry point: `PullSECFinancialsForTicker(ticker, [silent])`.** Same pipeline as the Ribbon button but accepts the ticker as a parameter (no InputBox), and `silent:=True` suppresses the success message box. Useful for VBA driving the add-in from another macro, or for headless automation: `Application.Run "SEC_XBRL_Addin.xlam!PullSECFinancialsForTicker", "AAPL"`.
+- **Code-quality cleanups in source:** removed an unreachable `ParseError:` label in `modTickerLookup.bas`; added `SafeDouble` helper alongside `SafeLong` in `modJSONParser.bas` for numeric fields that exceed Long range (already correct on the hot path; this is for future use).
+- **New verification scripts:** `scripts/smoke_test.ps1` (no-network smoke test, runs in <30s) and `scripts/e2e_test.ps1` (full pipeline against live SEC, downloads ~15 MB AAPL companyfacts).
+
+## Previous Fixes — v1.0.6 (2026-04-28)
 
 - **Permanent fix for "An error occurred while loading 'modConfig'" dialog**: applied VBA purging — all p-code (PerformanceCache) has been stripped from every module stream. Excel is forced to recompile from source on first load, which completely eliminates the load error regardless of Excel version or VBA engine build. Per MS-OVBA spec §2.4.1, PerformanceCache "MUST be ignored on read" — this is the correct and permanent solution.
 - User-Agent `SEC-XBRL-Addin sec-xbrl-addin@outlook.com` confirmed active across all modules.
@@ -52,7 +61,7 @@ If you skip Unblock or Trusted Location, the ribbon tab may not appear.
 
 **Latest Download:**
 
-- **[⬇ SEC_XBRL_Addin.xlam — v1.0.6](https://github.com/CalebSmik/sec-edgar-xbrl-excel-addin/raw/v1.0.6/dist/SEC_XBRL_Addin.xlam)**
+- **[⬇ SEC_XBRL_Addin.xlam — v1.0.7](https://github.com/CalebSmit/sec-edgar-xbrl-excel-addin/raw/v1.0.7/dist/SEC_XBRL_Addin.xlam)**
 - **[Releases page](https://github.com/CalebSmit/sec-edgar-xbrl-excel-addin/releases)**
 
 **Latest Source Code:**

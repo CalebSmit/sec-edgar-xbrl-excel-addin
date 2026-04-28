@@ -92,13 +92,26 @@ End Function
 
 '------------------------------------------------------------------------------
 ' SafeLong
-' Returns dict(key) as Long, or 0 if absent.
+' Returns dict(key) as Long, or 0 if absent or on overflow (silent fallback).
 '------------------------------------------------------------------------------
 Public Function SafeLong(ByVal dict As Object, ByVal key As String) As Long
     SafeLong = 0
     If dict Is Nothing Then Exit Function
     On Error Resume Next
     If dict.Exists(key) Then SafeLong = CLng(dict(key))
+    On Error GoTo 0
+End Function
+
+'------------------------------------------------------------------------------
+' SafeDouble
+' Returns dict(key) as Double, or 0 if absent. Use for numeric fact values
+' (e.g. "val") that may exceed VBA Long range (2,147,483,647).
+'------------------------------------------------------------------------------
+Public Function SafeDouble(ByVal dict As Object, ByVal key As String) As Double
+    SafeDouble = 0#
+    If dict Is Nothing Then Exit Function
+    On Error Resume Next
+    If dict.Exists(key) Then SafeDouble = CDbl(dict(key))
     On Error GoTo 0
 End Function
 

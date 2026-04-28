@@ -99,13 +99,6 @@ Public Function ResolveTicker(ByVal ticker As String, _
     errCode = ERR_TICKER_NOT_FOUND
     errMsg = "Ticker '" & tickerUC & "' not found in SEC database."
     Application.StatusBar = False
-    Exit Function
-
-ParseError:
-    errCode = ERR_JSON_PARSE
-    errMsg = "Failed to parse SEC response. The data format may have changed."
-    Application.StatusBar = False
-    Exit Function
 End Function
 
 Private Function GetTickerMap(ByRef errCode As String, ByRef errMsg As String) As Object

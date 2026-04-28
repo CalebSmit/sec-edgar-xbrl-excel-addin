@@ -25,6 +25,21 @@ Public Sub PullSECFinancials()
         Exit Sub   ' User cancelled  -  silent exit
     End If
 
+    PullSECFinancialsForTicker ticker
+End Sub
+
+'------------------------------------------------------------------------------
+' PullSECFinancialsForTicker
+' Same pipeline as PullSECFinancials but with the ticker passed in (no
+' InputBox). Useful for scripted/automated invocation, e.g.:
+'   Application.Run "SEC_XBRL_Addin.xlam!PullSECFinancialsForTicker", "AAPL"
+'
+' Set silent:=True to suppress the success/info MsgBox at the end (errors
+' still surface via ShowError). Useful for automation that drives the macro
+' from a hidden Excel COM session.
+'------------------------------------------------------------------------------
+Public Sub PullSECFinancialsForTicker(ByVal ticker As String, _
+                                      Optional ByVal silent As Boolean = False)
     ' --- Phase 1: Resolve ticker -> CIK (E1/E3/E5) -------------------------
     ShowProgress PROG_RESOLVING
 
@@ -115,14 +130,16 @@ Public Sub PullSECFinancials()
     ClearProgress
 
     ' --- Success summary ---------------------------------------------------
-    MsgBox "Data written for " & companyName & " (" & UCase(Trim(ticker)) & ")" & vbCrLf & _
-           "CIK: " & cik10 & vbCrLf & _
-           "Workbook: " & targetWb.Name & vbCrLf & _
-           "Income Statement: " & isN & " concepts" & vbCrLf & _
-           "Balance Sheet: "   & bsN & " concepts" & vbCrLf & _
-           "Cash Flow: "       & cfsN & " concepts" & vbCrLf & _
-           "JSON size: "       & GetResponseSize(jsonText), _
-           vbInformation, "SEC EDGAR  -  Complete"
+    If Not silent Then
+        MsgBox "Data written for " & companyName & " (" & UCase(Trim(ticker)) & ")" & vbCrLf & _
+               "CIK: " & cik10 & vbCrLf & _
+               "Workbook: " & targetWb.Name & vbCrLf & _
+               "Income Statement: " & isN & " concepts" & vbCrLf & _
+               "Balance Sheet: "   & bsN & " concepts" & vbCrLf & _
+               "Cash Flow: "       & cfsN & " concepts" & vbCrLf & _
+               "JSON size: "       & GetResponseSize(jsonText), _
+               vbInformation, "SEC EDGAR  -  Complete"
+    End If
 End Sub
 
 '------------------------------------------------------------------------------

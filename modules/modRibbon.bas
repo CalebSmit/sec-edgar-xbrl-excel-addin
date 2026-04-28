@@ -31,12 +31,17 @@ End Sub
 ' Registers Ctrl+Shift+S as a fallback keyboard shortcut.
 ' Called from ThisWorkbook.Workbook_Open (see ThisWorkbook.cls).
 ' Unregistered on Workbook_BeforeClose to avoid conflict.
+'
+' Wrapped in On Error Resume Next so that an unusual workbook name (e.g.
+' renamed install) does not surface a runtime-error popup at workbook open.
+' If shortcut registration fails, the Ribbon button still works.
 '------------------------------------------------------------------------------
 Public Sub RegisterShortcut()
-    ' Ctrl+Shift+S -> PullSECFinancials
+    On Error Resume Next
     Dim escapedName As String
     escapedName = Replace(ThisWorkbook.Name, "'", "''")
     Application.OnKey "^+S", "'" & escapedName & "'!PullSECFinancials"
+    On Error GoTo 0
 End Sub
 
 '------------------------------------------------------------------------------
@@ -44,5 +49,7 @@ End Sub
 ' Clears the Ctrl+Shift+S shortcut registration on close.
 '------------------------------------------------------------------------------
 Public Sub UnregisterShortcut()
+    On Error Resume Next
     Application.OnKey "^+S"    ' No second argument -> resets to default behaviour
+    On Error GoTo 0
 End Sub

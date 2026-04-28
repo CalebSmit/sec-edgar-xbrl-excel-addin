@@ -18,11 +18,17 @@ Attribute VB_Exposed = True
 Option Explicit
 
 Private Sub Workbook_Open()
-    ' Register Ctrl+Shift+S shortcut as fallback for users without Ribbon UI
+    ' Register Ctrl+Shift+S shortcut as fallback for users without Ribbon UI.
+    ' On Error swallow to ensure the add-in NEVER pops a runtime-error dialog
+    ' on Excel startup; a registration failure should not block the user.
+    On Error Resume Next
     RegisterShortcut
+    On Error GoTo 0
 End Sub
 
 Private Sub Workbook_BeforeClose(Cancel As Boolean)
     ' Clean up shortcut to avoid leaving a dead key binding
+    On Error Resume Next
     UnregisterShortcut
+    On Error GoTo 0
 End Sub
