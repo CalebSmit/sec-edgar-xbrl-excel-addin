@@ -5,9 +5,14 @@
 Pull live financial statement data from the SEC EDGAR database directly into Excel.
 No sign-up, no subscriptions, no backend — data comes straight from the SEC.
 
-## Latest Fixes — v1.0.4 (2026-04-28)
+## Latest Fixes — v1.0.5 (2026-04-28)
 
-- **Fix for E2 SEC Rate Limit / HTTP 403 error**: updated User-Agent string to . SEC requires a real, reachable contact address in the UA — the previous  address was rejected by SEC's rate-limiter with a persistent 403 even after retries. The new UA passes SEC's validation.
+- **Fix for modConfig load error**: resolved "An error occurred while loading 'modConfig'" dialog that appeared when opening the add-in in Excel. Root cause: the v1.0.4 patch used an incompatible MS-OVBA stream compressor that oletools could read but Excel's VBA engine rejected. v1.0.5 uses a fully spec-compliant compressor (matching Excel's greedy LZ77 with correct copytoken_help bit-count formula) so the compressed VBA source is accepted by all Excel versions.
+- Both `modConfig` and `modHTTP` source code updated: old User-Agent `sec-addin@github.io` removed from all locations (constant, p-code, and comments).
+
+## Previous Fixes — v1.0.4 (2026-04-28)
+
+- **Fix for E2 SEC Rate Limit / HTTP 403 error**: updated User-Agent string. SEC requires a real, reachable contact address in the UA — the previous address was rejected by SEC's rate-limiter with a persistent 403 even after retries. The new UA `SEC-XBRL-Addin sec-xbrl-addin@outlook.com` passes SEC's validation.
 
 ## Previous Fixes — v1.0.3 (2026-04-28)
 
