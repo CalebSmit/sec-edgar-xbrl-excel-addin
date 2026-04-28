@@ -27,14 +27,13 @@ Public Const SEC_FACTS_BASE_URL As String = _
 ' ---------------------------------------------------------------------------
 ' HTTP Configuration
 ' SEC requires User-Agent in format: "AppName email@domain"
-' https://www.sec.gov/about/webmaster-frequently-asked-questions#user-agent
-' IMPORTANT: Do NOT use a "users.noreply.github.com" address here.
-' SEC may reject noreply identities with persistent HTTP 403 responses.
+' https://www.sec.gov/os/webmaster-faq#user-agent
+' SEC rate limit: 10 requests/second max (as of 2026).
 ' ---------------------------------------------------------------------------
 Public Const HTTP_USER_AGENT As String = _
-    "SEC XBRL Excel Add-in support@example.com"
+    "SEC XBRL Excel Add-in sec-addin@github.io"
 Public Const HTTP_TIMEOUT_MS As Long = 30000    ' 30s
-Public Const RATE_LIMIT_DELAY_MS As Long = 250  ' 250ms = 4 req/sec max (still conservative)
+Public Const RATE_LIMIT_DELAY_MS As Long = 110  ' 110ms = ~9 req/sec (safely under 10/s SEC limit)
 Public Const HTTP_MAX_RETRIES As Long = 4       ' Initial try + 4 retries on transient errors
 Public Const HTTP_RETRY_BASE_MS As Long = 750   ' Exponential backoff base
 Public Const HTTP_RETRY_MAX_MS As Long = 10000  ' Cap individual retry wait at 10s

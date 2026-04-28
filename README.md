@@ -5,17 +5,18 @@
 Pull live financial statement data from the SEC EDGAR database directly into Excel.
 No sign-up, no subscriptions, no backend — data comes straight from the SEC.
 
-## Latest Reliability Fixes (2026-04-27)
+## Latest Fixes (2026-04-27)
 
 - Output now writes to your active workbook instead of the hidden add-in workbook.
 - SEC ISO dates are parsed in a locale-independent way to avoid regional date issues.
 - `Ctrl + Shift + S` shortcut now targets the add-in macro explicitly.
-- HTTP requests now use a compliant SEC identity string (`AppName email`).
-- User-Agent identity now avoids noreply addresses that can trigger SEC HTTP 403 blocks.
+- HTTP User-Agent updated to `SEC XBRL Excel Add-in sec-addin@github.io` — a real domain required by SEC.
+- Rate limit updated from 250 ms to 110 ms (~9 req/s), matching the SEC's actual 10 req/s ceiling.
 - HTTP transport now auto-retries transient `403/429/5xx` SEC responses with exponential backoff + jitter.
 - `Retry-After` response headers are respected when SEC provides them.
 - Ticker map lookups now use in-memory caching to reduce repeated SEC requests.
 - JSON parsing no longer hard-requires Microsoft Scripting Runtime.
+- Removed stale `SEC_XBRL_Addin_FINAL_2026-04-27.xlam` from `dist/` — it had a compile-breaking VBA class header bug. Only one file is in `dist/` now.
 
 ---
 
@@ -101,6 +102,8 @@ Even after installing, Excel will silently load the add-in without its ribbon ta
 
 The **SEC EDGAR** tab will now appear in your ribbon.
 
+> **If Excel shows a yellow security bar saying "Macros Disabled":** Click **Enable Content**. This is required every time you open a new Excel session with the add-in if your Trust Center settings are restrictive. Adding your Documents folder as a Trusted Location (Step 3) eliminates this prompt permanently.
+
 ---
 
 ### Troubleshooting
@@ -111,6 +114,7 @@ The **SEC EDGAR** tab will now appear in your ribbon.
 | "This file type is not supported in Protected View" | You skipped Step 2. Right-click the file → Properties → check **Unblock** → OK. Repeat Step 4. |
 | SEC EDGAR tab does not appear | You skipped Step 3. Add your Documents folder as a Trusted Location, then close and reopen Excel. |
 | Checkbox in Step 4 is greyed out | Close Excel completely. Reopen it without opening any file. Then repeat Step 4. |
+| Yellow bar: "Macros have been disabled" | Click **Enable Content**. To make this permanent, complete Step 3 (Trusted Location). |
 
 ### If VBA opens and shows compile errors
 
@@ -119,8 +123,8 @@ This usually means Excel is still loading an older SEC add-in from a different f
 1. Close **all** Excel windows.
 2. Open Excel (blank workbook) -> **File -> Options -> Add-ins**.
 3. At bottom, **Manage: Excel Add-ins** -> **Go...**
-4. Uncheck all old SEC entries (for example `SEC_XBRL_Addin.xlam` or `SEC_XBRL_Addin_FINAL_2026-04-27.xlam`).
-5. Remove old entries if available, then click **Browse...** and select only your latest `SEC_XBRL_Addin.xlam` file in Documents.
+4. Uncheck all old SEC entries (look for anything named `SEC_XBRL_Addin` or similar).
+5. Remove old entries if available, then click **Browse...** and select only the latest `SEC_XBRL_Addin.xlam` file in Documents.
 6. Ensure only one SEC add-in entry is checked, then restart Excel.
 
 ---
@@ -206,7 +210,7 @@ Large companies like Apple (~15 MB) or JPMorgan (~25 MB) may take 15–30 second
 ```
 sec-edgar-xbrl-excel-addin/
 ├── dist/
-│   ├── SEC_XBRL_Addin.xlam   ← Prebuilt add-in (download this)
+│   ├── SEC_XBRL_Addin.xlam   ← Prebuilt add-in (download this — only file in dist/)
 │   └── INSTALL.txt            ← Beginner install guide
 ├── modules/                   ← VBA source (10 .bas / .cls files)
 ├── dependencies/

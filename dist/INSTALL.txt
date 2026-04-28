@@ -72,7 +72,17 @@ STEP 4 — Install the add-in
   9. Click OK
 
 ------------------------------------------------------------------
-STEP 5 — Confirm it worked
+STEP 5 — Enable Content (if prompted)
+------------------------------------------------------------------
+
+If Excel shows a yellow bar saying "Macros have been disabled",
+click Enable Content.
+
+This bar only appears if you skipped Step 3. Adding your Documents
+folder as a Trusted Location (Step 3) eliminates this prompt.
+
+------------------------------------------------------------------
+STEP 6 — Confirm it worked
 ------------------------------------------------------------------
 
 A new tab called "SEC EDGAR" will appear in the Excel ribbon.
@@ -99,6 +109,10 @@ Fix: You skipped Step 3. Add your Documents folder as a Trusted
 Problem: The checkbox in Step 4 is greyed out / won't stay checked
 Fix: Close Excel completely. Reopen it WITHOUT opening any file.
      Then repeat Step 4.
+
+Problem: Yellow bar says "Macros have been disabled"
+Fix: Click Enable Content. To make this permanent, add your
+     Documents folder as a Trusted Location (Step 3).
 
 ------------------------------------------------------------------
 UNINSTALLING

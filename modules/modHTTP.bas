@@ -7,8 +7,8 @@ Attribute VB_Name = "modHTTP"
 '   Falls back to MSXML2.ServerXMLHTTP.6.0 if WinHttp unavailable.
 '
 ' SEC requirements (PRD S3):
-'   - User-Agent: "SECExcelAddin contact@example.com"
-'   - Rate cap: 5 req/sec (enforced via 200ms sleep between calls)
+'   - User-Agent: "AppName email@domain" (real domain required per SEC FAQ)
+'   - Rate cap: 10 req/sec max per SEC docs; 110ms delay = ~9 req/sec safe
 '   - HTTPS only
 '
 ' VERIFIED field names / endpoints: none referenced here  -  this module is
