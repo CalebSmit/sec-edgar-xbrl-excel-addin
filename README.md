@@ -21,9 +21,19 @@ No sign-up, no subscriptions, no backend — data comes straight from the SEC.
 
 ## Download & Install
 
+### Quick Setup (2 minutes)
+
+1. Download `SEC_XBRL_Addin.xlam` from the link below.
+2. Save it in `C:\Users\YourName\Documents\`.
+3. Right-click the file -> **Properties** -> check **Unblock** -> **OK**.
+4. In Excel, add your Documents folder as a **Trusted Location**.
+5. In Excel, install the file using **File -> Options -> Add-ins -> Excel Add-ins -> Go... -> Browse**.
+
+If you skip Unblock or Trusted Location, the ribbon tab may not appear.
+
 **Latest Download:**
 
-- **[⬇ SEC_XBRL_Addin_FINAL_2026-04-27.xlam (master/dist)](https://github.com/CalebSmit/sec-edgar-xbrl-excel-addin/raw/master/dist/SEC_XBRL_Addin_FINAL_2026-04-27.xlam)**
+- **[⬇ SEC_XBRL_Addin.xlam (master/dist)](https://github.com/CalebSmit/sec-edgar-xbrl-excel-addin/raw/master/dist/SEC_XBRL_Addin.xlam)**
 - **[Releases page](https://github.com/CalebSmit/sec-edgar-xbrl-excel-addin/releases)**
 
 **Latest Source Code:**
@@ -101,6 +111,17 @@ The **SEC EDGAR** tab will now appear in your ribbon.
 | "This file type is not supported in Protected View" | You skipped Step 2. Right-click the file → Properties → check **Unblock** → OK. Repeat Step 4. |
 | SEC EDGAR tab does not appear | You skipped Step 3. Add your Documents folder as a Trusted Location, then close and reopen Excel. |
 | Checkbox in Step 4 is greyed out | Close Excel completely. Reopen it without opening any file. Then repeat Step 4. |
+
+### If VBA opens and shows compile errors
+
+This usually means Excel is still loading an older SEC add-in from a different folder.
+
+1. Close **all** Excel windows.
+2. Open Excel (blank workbook) -> **File -> Options -> Add-ins**.
+3. At bottom, **Manage: Excel Add-ins** -> **Go...**
+4. Uncheck all old SEC entries (for example `SEC_XBRL_Addin.xlam` or `SEC_XBRL_Addin_FINAL_2026-04-27.xlam`).
+5. Remove old entries if available, then click **Browse...** and select only your latest `SEC_XBRL_Addin.xlam` file in Documents.
+6. Ensure only one SEC add-in entry is checked, then restart Excel.
 
 ---
 
