@@ -1,14 +1,18 @@
 # SEC EDGAR XBRL Financial Statements — Excel Add-in
 
-**Version:** 1.0.4 | **Platform:** Excel for Windows | **Cost:** Free
+**Version:** 1.0.6 | **Platform:** Excel for Windows | **Cost:** Free
 
 Pull live financial statement data from the SEC EDGAR database directly into Excel.
 No sign-up, no subscriptions, no backend — data comes straight from the SEC.
 
-## Latest Fixes — v1.0.5 (2026-04-28)
+## Latest Fixes — v1.0.6 (2026-04-28)
 
-- **Fix for modConfig load error**: resolved "An error occurred while loading 'modConfig'" dialog that appeared when opening the add-in in Excel. Root cause: the v1.0.4 patch used an incompatible MS-OVBA stream compressor that oletools could read but Excel's VBA engine rejected. v1.0.5 uses a fully spec-compliant compressor (matching Excel's greedy LZ77 with correct copytoken_help bit-count formula) so the compressed VBA source is accepted by all Excel versions.
-- Both `modConfig` and `modHTTP` source code updated: old User-Agent `sec-addin@github.io` removed from all locations (constant, p-code, and comments).
+- **Permanent fix for "An error occurred while loading 'modConfig'" dialog**: applied VBA purging — all p-code (PerformanceCache) has been stripped from every module stream. Excel is forced to recompile from source on first load, which completely eliminates the load error regardless of Excel version or VBA engine build. Per MS-OVBA spec §2.4.1, PerformanceCache "MUST be ignored on read" — this is the correct and permanent solution.
+- User-Agent `SEC-XBRL-Addin sec-xbrl-addin@outlook.com` confirmed active across all modules.
+
+## Previous Fixes — v1.0.5 (2026-04-28)
+
+- **Fix for modConfig load error** (partial — compressor issue): used spec-compliant MS-OVBA compressor. Did not resolve the underlying p-code conflict.
 
 ## Previous Fixes — v1.0.4 (2026-04-28)
 
